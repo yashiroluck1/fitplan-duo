@@ -1,118 +1,105 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, Apple, CheckCircle2, Circle, AlertTriangle, Timer, Play, Pause, Users, HeartPulse, ChevronDown, Image as ImageIcon, ExternalLink, Info, Beaker } from 'lucide-react';
+import { Activity, Apple, CheckCircle2, AlertTriangle, Timer, Play, Pause, Users, HeartPulse, ChevronDown, Info, Beaker, Youtube, LogOut, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Brain } from 'lucide-react';
 
-const ExerciseMedia = ({ src, alt, exerciseName }) => {
-  const [hasError, setHasError] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  if (hasError) {
-    return (
-      <div className="w-full h-32 bg-slate-100 rounded-lg flex flex-col items-center justify-center border border-slate-200 text-slate-500">
-        <ImageIcon className="w-8 h-8 mb-2 opacity-50" />
-        <span className="text-xs text-center px-4 mb-2">GIF no disponible</span>
-        <a 
-          href={`https://www.youtube.com/results?search_query=como+hacer+${encodeURIComponent(exerciseName)}+ejercicio`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full flex items-center gap-1 hover:bg-blue-200 transition-colors"
-        >
-          <ExternalLink className="w-3 h-3" /> Ver en YouTube
-        </a>
-      </div>
-    );
-  }
-
+const YouTubeButton = ({ videoId }) => {
+  const openTutorial = () => window.open(`https://www.youtube.com/shorts/${videoId}`, '_blank', 'noopener,noreferrer');
+  if (!videoId) return null;
   return (
-    <div className="relative w-full h-32 bg-slate-100 rounded-lg overflow-hidden border border-slate-200">
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-slate-100 animate-pulse">
-          <span className="text-xs text-slate-400 font-medium">Cargando GIF...</span>
-        </div>
-      )}
-      <img 
-        src={src} 
-        alt={alt}
-        className={`w-full h-full object-cover transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
-        onLoad={() => setIsLoading(false)}
-        onError={() => setHasError(true)}
-      />
-    </div>
+    <button onClick={openTutorial} className="w-full h-14 bg-red-600 hover:bg-red-700 text-white rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-95 shadow-sm mb-4">
+      <Youtube className="w-6 h-6" />
+      <div className="flex flex-col items-start text-left">
+        <span className="font-black text-sm leading-none">Ver Técnica</span>
+        <span className="text-[10px] opacity-80 uppercase tracking-wider">YouTube Short</span>
+      </div>
+    </button>
   );
 };
 
+const motivaciones = [
+  "Tu cerebro está creando nuevas vías neuronales. ¡La resistencia física construye resiliencia mental!",
+  "La dopamina liberada al terminar esta serie fortalecerá tu disciplina para mañana.",
+  "Estás reduciendo la actividad de tu amígdala (centro del estrés). Este esfuerzo te da paz mental.",
+  "El ardor muscular es tu cerebro adaptándose para hacerte más fuerte e imparable.",
+  "Has vencido la resistencia inicial de tu cerebro. ¡Estás en estado de flujo, sigue así!"
+];
+
 export default function App() {
+  // Autenticación
+  const [activeProfile, setActiveProfile] = useState(null);
+
+  // Navegación y Estados
   const [activeTab, setActiveTab] = useState('entrenamiento');
   const [activeDay, setActiveDay] = useState(0);
-  const [activeProfile, setActiveProfile] = useState('Andros');
+  const [activeExerciseIdx, setActiveExerciseIdx] = useState(0);
   const [useScale, setUseScale] = useState(true);
   
-  // Tracking states
-  const [completedSets, setCompletedSets] = useState({}); // formato: Profile-DayIdx-ExIdx-SetIdx
+  // Persistencia de datos local (simulada en estado para este ejemplo)
+  const [completedSets, setCompletedSets] = useState({}); 
   const [mealSelections, setMealSelections] = useState({});
-  
-  // Supplements state
-  const [suppStatus, setSuppStatus] = useState('none'); // 'none', 'taking', 'suggest'
+  const [suppStatus, setSuppStatus] = useState('none'); 
   const [suppType, setSuppType] = useState({ protein: false, creatine: false });
+  const [calendarData, setCalendarData] = useState({}); // Formato: 'YYYY-MM-DD-Profile': true
 
-  // Advanced Timer State
+  // Temporizador Adaptativo
   const [timeLeft, setTimeLeft] = useState(60);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const [timerMode, setTimerMode] = useState('rest'); // 'rest' o 'work'
+  const [timerMode, setTimerMode] = useState('rest'); 
   const [activeWorkSet, setActiveWorkSet] = useState(null);
-  const [activeWorkName, setActiveWorkName] = useState('');
+  
+  // Modal de esfuerzo
+  const [showExertionModal, setShowExertionModal] = useState(false);
+  const [currentMotivation, setCurrentMotivation] = useState("");
 
   const playBeep = () => {
     try {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       const ctx = new AudioContext();
-      const osc = ctx.createOscillator();
-      const gainNode = ctx.createGain();
-      
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(800, ctx.currentTime);
-      gainNode.gain.setValueAtTime(0.5, ctx.currentTime);
-      
-      osc.connect(gainNode);
-      gainNode.connect(ctx.destination);
-      
-      osc.start();
-      gainNode.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.5);
-      osc.stop(ctx.currentTime + 0.5);
-    } catch (e) {
-      console.log("Audio no soportado");
-    }
+      const playTone = (time, duration) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, time);
+        gain.gain.setValueAtTime(0.5, time);
+        gain.gain.exponentialRampToValueAtTime(0.00001, time + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(time);
+        osc.stop(time + duration);
+      };
+      const now = ctx.currentTime;
+      playTone(now, 0.4);
+      playTone(now + 0.6, 0.4);
+      playTone(now + 1.2, 0.6); // 3 pitidos largos y claros
+    } catch (e) { console.log("Audio no disponible"); }
   };
 
   useEffect(() => {
     let interval = null;
     if (isTimerRunning && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft(prev => prev - 1);
-      }, 1000);
+      interval = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
     } else if (isTimerRunning && timeLeft === 0) {
       setIsTimerRunning(false);
       playBeep();
-      
       if (timerMode === 'work') {
-        // Marca la serie de esfuerzo como completada
-        if (activeWorkSet) {
-          setCompletedSets(prev => ({ ...prev, [activeWorkSet]: true }));
-        }
-        // Pasa automáticamente a descanso
-        setTimerMode('rest');
-        setTimeLeft(60);
-        setIsTimerRunning(true);
+        const newSets = { ...completedSets, [activeWorkSet.key]: true };
+        setCompletedSets(newSets);
+        checkAndTriggerExertion(newSets, activeWorkSet.exIdx, activeWorkSet.totalSets);
         setActiveWorkSet(null);
       }
     }
     return () => clearInterval(interval);
   }, [isTimerRunning, timeLeft, timerMode, activeWorkSet]);
 
+  // Restablecer ejercicio al cambiar de día
+  useEffect(() => {
+    setActiveExerciseIdx(0);
+  }, [activeDay]);
+
   const toggleTimer = () => setIsTimerRunning(!isTimerRunning);
   
   const resetTimer = (seconds = 60, mode = 'rest') => {
     setTimerMode(mode);
-    setIsTimerRunning(mode === 'rest'); // Inicia auto si es descanso
+    setIsTimerRunning(mode === 'rest');
     setTimeLeft(seconds);
     if (mode === 'rest') setActiveWorkSet(null);
   };
@@ -123,540 +110,556 @@ export default function App() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const toggleSet = (dayIdx, exIdx, setIdx, isTimeBased, timeInSeconds, exName) => {
-    const key = `${activeProfile}-${dayIdx}-${exIdx}-${setIdx}`;
-    const isCurrentlyDone = completedSets[key];
+  const checkAndTriggerExertion = (newSets, exIdx, totalSets) => {
+    let allDone = true;
+    for (let i = 0; i < totalSets; i++) {
+      if (!newSets[`${activeProfile}-${activeDay}-${exIdx}-${i}`]) {
+        allDone = false; break;
+      }
+    }
+    
+    if (allDone) {
+      setCurrentMotivation(motivaciones[Math.floor(Math.random() * motivaciones.length)]);
+      setShowExertionModal(true);
+    } else {
+      resetTimer(60, 'rest');
+    }
+  };
 
-    if (!isCurrentlyDone) {
+  const handleExertionResponse = (restTime) => {
+    setShowExertionModal(false);
+    resetTimer(restTime, 'rest');
+    
+    // Auto avanzar al siguiente ejercicio
+    const currentPlan = profiles[activeProfile].workoutPlan[activeDay] || profiles[activeProfile].workoutPlan[0];
+    if (activeExerciseIdx < currentPlan.exercises.length - 1) {
+      setActiveExerciseIdx(prev => prev + 1);
+    } else {
+      // Marcar rutina completada en calendario
+      markTodayCalendar();
+    }
+  };
+
+  const toggleSet = (dayIdx, exIdx, setIdx, isTimeBased, timeInSeconds, totalSets) => {
+    const key = `${activeProfile}-${dayIdx}-${exIdx}-${setIdx}`;
+    if (!completedSets[key]) {
       if (isTimeBased) {
-        // Activa modo Esfuerzo/Tiempo
         setTimerMode('work');
         setTimeLeft(timeInSeconds);
-        setActiveWorkSet(key);
-        setActiveWorkName(exName);
+        setActiveWorkSet({ key, exIdx, totalSets });
         setIsTimerRunning(true);
       } else {
-        // Marca normal y activa descanso
-        setCompletedSets(prev => ({ ...prev, [key]: true }));
-        resetTimer(60, 'rest');
+        const newSets = { ...completedSets, [key]: true };
+        setCompletedSets(newSets);
+        checkAndTriggerExertion(newSets, exIdx, totalSets);
       }
     } else {
-      // Desmarcar
       setCompletedSets(prev => ({ ...prev, [key]: false }));
-      if (activeWorkSet === key) {
+      if (activeWorkSet?.key === key) {
         setIsTimerRunning(false);
         setActiveWorkSet(null);
       }
     }
   };
 
+  const markTodayCalendar = () => {
+    const today = new Date().toISOString().split('T')[0];
+    setCalendarData(prev => ({ ...prev, [`${today}-${activeProfile}`]: true }));
+  };
+
+  const toggleCalendarDay = (dayNum) => {
+    const d = new Date();
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+    const key = `${dateStr}-${activeProfile}`;
+    setCalendarData(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
   const handleMealChange = (mealIndex, optionIndex) => {
-    setMealSelections(prev => ({
-      ...prev,
-      [`${activeProfile}-${mealIndex}`]: parseInt(optionIndex)
-    }));
+    setMealSelections(prev => ({ ...prev, [`${activeProfile}-${mealIndex}`]: parseInt(optionIndex) }));
   };
+  const getSelectedMealOption = (mealIndex) => mealSelections[`${activeProfile}-${mealIndex}`] || 0;
 
-  const getSelectedMealOption = (mealIndex) => {
-    return mealSelections[`${activeProfile}-${mealIndex}`] || 0;
-  };
-
-  const defaultGif = "https://media1.giphy.com/media/l3vR5NfXwQ0hU02qY/giphy.gif";
-
+  // --- DATOS DE PERFILES ---
   const rawProfiles = {
     Andros: {
-      name: 'Andros',
       goal: 'Recomposición, cuidado de hernia discal.',
+      warning: 'Mantén la columna neutral. Cero abdominales tipo "crunch".',
       nutrition: {
-        calories: '~2,000',
-        protein: '160g',
-        type: 'Ayuno Intermitente 16:8 (Económica)',
+        calories: '~2,000', protein: '160g',
         meals: [
-          { 
-            time: '12:00 PM', title: 'Romper Ayuno',
-            options: [
-              { name: 'Opción 1: Huevos y Avena', items: [{scale: '200g Huevos', noScale: '4 Huevos enteros'}, {scale: '250g Avena', noScale: '1 Taza de avena'}, {scale: '100g Plátano', noScale: '1 Plátano'}] },
-              { name: 'Opción 2: Atún y Arroz', items: [{scale: '200g Atún', noScale: '2 Latas de atún'}, {scale: '150g Arroz', noScale: '1 Taza de arroz'}, {scale: '150g Manzana', noScale: '1 Manzana'}] }
-            ]
-          },
-          { 
-            time: '4:00 PM', title: 'Comida Principal',
-            options: [
-              { name: 'Opción 1: Pollo y Papa', items: [{scale: '200g Pollo', noScale: '1 Pechuga'}, {scale: '300g Papas', noScale: '2 Papas medianas'}, {scale: '100g Brócoli', noScale: '1 Taza brócoli'}] },
-              { name: 'Opción 2: Lentejas y Huevo', items: [{scale: '400g Lentejas', noScale: '2 Tazas lentejas'}, {scale: '150g Huevo', noScale: '3 Huevos duros'}, {scale: 'Ensalada', noScale: 'Ensalada libre'}] }
-            ]
-          },
-          { 
-            time: '7:30 PM', title: 'Cierre de Ventana',
-            options: [
-              { name: 'Opción 1: Pollo y Cacahuates', items: [{scale: '150g Pollo', noScale: '1 Pechuga mediana'}, {scale: 'Aceite oliva (15ml)', noScale: '1 Cda. aceite oliva'}, {scale: '30g Cacahuates', noScale: '1 Puñado cacahuates'}] },
-              { name: 'Opción 2: Huevos y Frijol', items: [{scale: '120g Claras + 50g Huevo', noScale: '4 Claras + 1 Huevo'}, {scale: '200g Frijoles', noScale: '1 Taza frijoles'}, {scale: 'Vegetales libres', noScale: 'Vegetales libres'}] }
-            ]
-          }
+          { time: '12:00 PM', title: 'Romper Ayuno', options: [{ name: 'Opción 1: Huevos y Avena', items: [{scale: '200g Huevos', noScale: '4 Huevos'}, {scale: '250g Avena', noScale: '1 Taza'}] }, { name: 'Opción 2: Atún y Arroz', items: [{scale: '200g Atún', noScale: '2 Latas'}, {scale: '150g Arroz', noScale: '1 Taza'}] }] },
+          { time: '4:00 PM', title: 'Comida Principal', options: [{ name: 'Opción 1: Pollo y Papa', items: [{scale: '200g Pollo', noScale: '1 Pechuga'}, {scale: '300g Papas', noScale: '2 Papas'}] }, { name: 'Opción 2: Lentejas y Huevo', items: [{scale: '400g Lentejas', noScale: '2 Tazas'}, {scale: '150g Huevo', noScale: '3 Huevos'}] }] },
+          { time: '7:30 PM', title: 'Cierre de Ventana', options: [{ name: 'Opción 1: Pollo y Maní', items: [{scale: '150g Pollo', noScale: '1 Pechuga'}, {scale: '30g Maní', noScale: '1 Puñado'}] }] }
         ]
       },
-      warning: 'Mantén la columna neutral. Cero abdominales tipo "crunch".',
       workoutPlan: [
-        {
-          day: 'Día 1', title: 'Tren Superior (Empuje)',
-          exercises: [
-            { name: 'Flexiones de pecho', sets: '3', reps: '8-15', note: 'Apoya rodillas si es necesario.', gif: defaultGif },
-            { name: 'Pike Push-ups', sets: '3', reps: '8-12', note: 'Cadera alta, enfocado en hombros.', gif: defaultGif },
-            { name: 'Fondos para tríceps', sets: '3', reps: '10-15', note: 'Espalda cerca de la silla.', gif: defaultGif },
-            { name: 'Plancha frontal', sets: '3', reps: '30 seg', note: 'Aprieta glúteos y abdomen.', gif: defaultGif },
-          ]
-        },
-        {
-          day: 'Día 2', title: 'Tren Inferior',
-          exercises: [
-            { name: 'Sentadillas', sets: '3', reps: '12-15', note: 'Torso erguido, baja sin dolor lumbar.', gif: defaultGif },
-            { name: 'Zancadas hacia atrás', sets: '3', reps: '10', note: 'Menos tensión en rodillas.', gif: defaultGif },
-            { name: 'Puente de glúteo', sets: '4', reps: '15', note: 'No daña la hernia.', gif: defaultGif },
-            { name: 'Elevación de talones', sets: '4', reps: '20', note: 'De pie, elevando sobre puntas.', gif: defaultGif },
-          ]
-        },
-        {
-          day: 'Día 3', title: 'Core (McGill) y Recuperación',
-          exercises: [
-            { name: 'Bird-Dog', sets: '3', reps: '6', note: 'Pausa de 3 seg arriba.', gif: defaultGif },
-            { name: 'Plancha lateral', sets: '3', reps: '20 seg', note: 'Apoya rodillas si necesitas.', gif: defaultGif },
-            { name: 'Curl-up McGill', sets: '3', reps: '8', note: 'Manos bajo la zona lumbar.', gif: defaultGif },
-            { name: 'Caminata ligera', sets: '1', reps: '30 min', note: 'Paso ligero sin impacto.', gif: defaultGif },
-          ]
-        },
-        {
-          day: 'Día 4', title: 'Tren Superior (Tracción)',
-          exercises: [
-            { name: 'Back Widows', sets: '4', reps: '10-15', note: 'Empuja con los codos el suelo.', gif: defaultGif },
-            { name: 'Deslizamientos suelo', sets: '3', reps: '10', note: 'Tira con la espalda usando toalla.', gif: defaultGif },
-            { name: 'Superman holds', sets: '3', reps: '15 seg', note: 'Eleva pecho suavemente. Omite si duele.', gif: defaultGif },
-            { name: 'Plancha toques hombro', sets: '3', reps: '20', note: 'Cadera estable.', gif: defaultGif },
-          ]
-        },
-        {
-          day: 'Día 5', title: 'Tren Inferior y Core',
-          exercises: [
-            { name: 'Sentadilla Búlgara', sets: '3', reps: '8-12', note: 'Pie trasero en silla.', gif: defaultGif },
-            { name: 'Step-ups', sets: '3', reps: '10', note: 'Sube a una silla firme.', gif: defaultGif },
-            { name: 'Wall Sit', sets: '3', reps: '45 seg', note: 'Espalda apoyada en pared.', gif: defaultGif },
-            { name: 'Bird-Dog', sets: '3', reps: '8', note: 'Refuerzo de estabilidad.', gif: defaultGif },
-          ]
-        }
+        { day: 'Día 1', title: 'Tren Superior (Empuje)', exercises: [
+          { name: 'Flexiones de pecho', sets: '3', reps: '8-15', note: 'Apoya rodillas si es necesario.', youtubeId: "zUymek3A64A" },
+          { name: 'Pike Push-ups', sets: '3', reps: '8-12', note: 'Foco en hombros.', youtubeId: "br9PF4gkXEA" },
+          { name: 'Fondos para tríceps', sets: '3', reps: '10-15', note: 'Espalda cerca de la silla.', youtubeId: "jDafIn0WMUw" },
+          { name: 'Plancha frontal', sets: '3', reps: '30 seg', note: 'Aprieta glúteos y abdomen.', youtubeId: "aFk1SjShgO4" }
+        ]},
+        { day: 'Día 2', title: 'Tren Inferior', exercises: [
+          { name: 'Sentadillas', sets: '3', reps: '12-15', note: 'Torso erguido.', youtubeId: "ba8tr1NzwXU" },
+          { name: 'Zancadas hacia atrás', sets: '3', reps: '10', note: 'Menos tensión en rodillas.', youtubeId: "ZRpD5MfIYA0" },
+          { name: 'Puente de glúteo', sets: '4', reps: '15', note: 'Seguro para la hernia.', youtubeId: "LkCJxld5Bj4" },
+          { name: 'Elevación de talones', sets: '4', reps: '20', note: 'Sobre puntas.', youtubeId: "ww-6lRXvI9Y" }
+        ]},
+        { day: 'Día 3', title: 'Estabilidad Core (McGill)', exercises: [
+          { name: 'Bird-Dog', sets: '3', reps: '6', note: 'Pausa de 3 seg arriba.', youtubeId: "OdP8gNwsndM" },
+          { name: 'Plancha lateral', sets: '3', reps: '20 seg', note: 'Apoya rodillas si necesitas.', youtubeId: "vyLwEzLWe_g" },
+          { name: 'Curl-up McGill', sets: '3', reps: '8', note: 'Manos bajo zona lumbar.', youtubeId: "fJi6F0VDqLY" }
+        ]},
+        { day: 'Día 4', title: 'Tren Superior (Tracción)', exercises: [
+          { name: 'Back Widows', sets: '4', reps: '10-15', note: 'Codos empujan el suelo.', youtubeId: "jDafIn0WMUw" },
+          { name: 'Deslizamientos suelo', sets: '3', reps: '10', note: 'Tira con la espalda.', youtubeId: "ba8tr1NzwXU" },
+          { name: 'Superman holds', sets: '3', reps: '15 seg', note: 'Eleva pecho suavemente.', youtubeId: "ww-6lRXvI9Y" }
+        ]},
+        { day: 'Día 5', title: 'Tren Inferior y Core', exercises: [
+          { name: 'Sentadilla Búlgara', sets: '3', reps: '8-12', note: 'Pie trasero en silla.', youtubeId: "ZRpD5MfIYA0" },
+          { name: 'Step-ups', sets: '3', reps: '10', note: 'Sube a silla firme.', youtubeId: "ww-6lRXvI9Y" },
+          { name: 'Wall Sit', sets: '3', reps: '45 seg', note: 'Espalda en pared.', youtubeId: "ba8tr1NzwXU" }
+        ]}
       ]
     },
     Charlotte: {
-      name: 'Charlotte',
       goal: 'Tonificar glúteos/abdomen, pérdida de grasa.',
+      warning: 'Cero flexión profunda de rodilla si hay dolor.',
       nutrition: {
-        calories: '~1,450',
-        protein: '110g',
-        type: 'Ayuno Intermitente 16:8 (Económica)',
+        calories: '~1,450', protein: '110g',
         meals: [
-          { 
-            time: '12:00 PM', title: 'Romper Ayuno',
-            options: [
-              { name: 'Opción 1: Huevos y Tortilla', items: [{scale: '100g Huevo + 60g Claras', noScale: '2 Huevos + 2 Claras'}, {scale: '60g Tortillas', noScale: '2 Tortillas maíz'}, {scale: '100g Manzana', noScale: '1 Manzana chica'}] },
-              { name: 'Opción 2: Avena Proteica', items: [{scale: '40g Avena seca', noScale: '1/2 Taza avena'}, {scale: '100g Atún', noScale: '1 Lata atún'}, {scale: '15g Cacahuates', noScale: '1 Cda. cacahuates'}] }
-            ]
-          },
-          { 
-            time: '4:00 PM', title: 'Comida Principal',
-            options: [
-              { name: 'Opción 1: Pollo y Arroz', items: [{scale: '120g Pollo', noScale: '1 Pechuga chica'}, {scale: '80g Arroz', noScale: '1/2 Taza arroz'}, {scale: 'Vegetales al vapor', noScale: 'Abundante brócoli/repollo'}] },
-              { name: 'Opción 2: Frijol y Huevo', items: [{scale: '300g Frijol', noScale: '1.5 Tazas frijol'}, {scale: '100g Huevo', noScale: '2 Huevos duros'}, {scale: 'Zanahorias', noScale: 'Zanahoria/pepino libre'}] }
-            ]
-          },
-          { 
-            time: '7:30 PM', title: 'Cierre de Ventana',
-            options: [
-              { name: 'Opción 1: Atún y Ensalada', items: [{scale: '100g Atún', noScale: '1 Lata atún'}, {scale: 'Aceite oliva (7ml)', noScale: '1/2 Cda. aceite oliva'}, {scale: 'Sin carbohidratos', noScale: 'Sin carbohidratos'}] },
-              { name: 'Opción 2: Pollo Ligero', items: [{scale: '100g Pechuga', noScale: '1/2 Pechuga desmenuzada'}, {scale: 'Ensalada verde', noScale: 'Ensalada verde libre'}, {scale: '25g Tostadas', noScale: '2 Tostadas horneadas'}] }
-            ]
-          }
+          { time: '12:00 PM', title: 'Romper Ayuno', options: [{ name: 'Opción 1: Huevos y Tortilla', items: [{scale: '100g Huevos', noScale: '2 Huevos'}, {scale: '60g Tortillas', noScale: '2 Tortillas'}] }, { name: 'Opción 2: Avena Proteica', items: [{scale: '40g Avena seca', noScale: '1/2 Taza avena'}, {scale: '1 Lata Atún', noScale: '1 Lata atún'}] }] },
+          { time: '4:00 PM', title: 'Comida Principal', options: [{ name: 'Opción 1: Pollo y Arroz', items: [{scale: '120g Pollo', noScale: '1 Pechuga chica'}, {scale: '80g Arroz', noScale: '1/2 Taza arroz'}] }, { name: 'Opción 2: Frijol y Huevo', items: [{scale: '300g Frijol', noScale: '1.5 Tazas frijol'}, {scale: '100g Huevo', noScale: '2 Huevos duros'}] }] },
+          { time: '7:30 PM', title: 'Cierre de Ventana', options: [{ name: 'Opción 1: Atún y Ensalada', items: [{scale: '100g Atún', noScale: '1 Lata atún'}, {scale: 'Ensalada', noScale: 'Libre'}] }] }
         ]
       },
-      warning: 'Cero flexión profunda de rodilla. Si hay dolor articular, detente.',
       workoutPlan: [
-        {
-          day: 'Día 1', title: 'Glúteos y Core (Piso)',
-          exercises: [
-            { name: 'Puente de glúteo', sets: '4', reps: '15-20', note: 'Aprieta glúteos 2 seg arriba.', gif: defaultGif },
-            { name: 'Frog Pumps', sets: '3', reps: '20', note: 'Suelas juntas, eleva cadera.', gif: defaultGif },
-            { name: 'Elevación lateral', sets: '3', reps: '15', note: 'Acostada de lado.', gif: defaultGif },
-            { name: 'Plancha (Plank)', sets: '3', reps: '30 seg', note: 'Mantén el abdomen apretado.', gif: defaultGif },
-          ]
-        },
-        {
-          day: 'Día 2', title: 'Tren Superior y Abdomen',
-          exercises: [
-            { name: 'Flexiones en rodillas', sets: '3', reps: '10-15', note: 'Cojín bajo las rodillas.', gif: defaultGif },
-            { name: 'Back Widows', sets: '3', reps: '12', note: 'Boca arriba, empuja con codos.', gif: defaultGif },
-            { name: 'Fondos tríceps', sets: '3', reps: '12', note: 'Mantén la espalda cerca de la silla.', gif: defaultGif },
-            { name: 'Dead Bugs', sets: '3', reps: '10', note: 'Lumbar pegada al piso.', gif: defaultGif },
-          ]
-        },
-        {
-          day: 'Día 3', title: 'Glúteo Aislado',
-          exercises: [
-            { name: 'Puente una pierna', sets: '3', reps: '12', note: 'Empuja con el talón.', gif: defaultGif },
-            { name: 'Clamshells (Ostras)', sets: '3', reps: '15', note: 'Acostada de lado.', gif: defaultGif },
-            { name: 'Patada pierna recta', sets: '3', reps: '15', note: 'En 4 puntos, pierna estirada.', gif: defaultGif },
-            { name: 'Toques de talón', sets: '3', reps: '20', note: 'Boca arriba, toca talones.', gif: defaultGif },
-          ]
-        },
-        {
-          day: 'Día 4', title: 'Core Intenso y Brazos',
-          exercises: [
-            { name: 'Flutter Kicks', sets: '3', reps: '30 seg', note: 'Manos bajo glúteos.', gif: defaultGif },
-            { name: 'Plancha lateral', sets: '3', reps: '20 seg', note: 'Trabajo de oblicuos.', gif: defaultGif },
-            { name: 'Toques hombro', sets: '3', reps: '20', note: 'Mantén la cadera quieta.', gif: defaultGif },
-            { name: 'Superman holds', sets: '3', reps: '15 seg', note: 'Trabajo suave de zona lumbar.', gif: defaultGif },
-          ]
-        },
-        {
-          day: 'Día 5', title: 'Cadera y Tren Superior',
-          exercises: [
-            { name: 'Peso Muerto Rumano', sets: '3', reps: '15', note: 'Rodillas casi estiradas.', gif: defaultGif },
-            { name: 'Puente Isométrico', sets: '3', reps: '45 seg', note: 'Mantén la cadera arriba.', gif: defaultGif },
-            { name: 'Flexiones declinadas', sets: '3', reps: '10-12', note: 'Manos apoyadas en sofá.', gif: defaultGif },
-            { name: 'Elevación piernas', sets: '3', reps: '15', note: 'Sentada, eleva piernas rectas.', gif: defaultGif },
-          ]
-        }
+        { day: 'Día 1', title: 'Glúteos y Core', exercises: [
+          { name: 'Puente de glúteo', sets: '4', reps: '15-20', note: 'Aprieta 2 seg arriba.', youtubeId: "LkCJxld5Bj4" },
+          { name: 'Frog Pumps', sets: '3', reps: '20', note: 'Suelas juntas.', youtubeId: "rgljhH1X4vc" },
+          { name: 'Elevación lateral', sets: '3', reps: '15', note: 'Acostada de lado.', youtubeId: "ww-6lRXvI9Y" },
+          { name: 'Plancha (Plank)', sets: '3', reps: '30 seg', note: 'Abdomen apretado.', youtubeId: "m8lSq4SC_eM" }
+        ]},
+        { day: 'Día 2', title: 'Tren Superior', exercises: [
+          { name: 'Flexiones rodillas', sets: '3', reps: '10-15', note: 'Cojín bajo rodillas.', youtubeId: "ba8tr1NzwXU" },
+          { name: 'Back Widows', sets: '3', reps: '12', note: 'Empuja con codos.', youtubeId: "ba8tr1NzwXU" },
+          { name: 'Fondos tríceps', sets: '3', reps: '12', note: 'Espalda cerca silla.', youtubeId: "jDafIn0WMUw" }
+        ]},
+        { day: 'Día 3', title: 'Glúteo Aislado', exercises: [
+          { name: 'Puente una pierna', sets: '3', reps: '12', note: 'Empuja con talón.', youtubeId: "LkCJxld5Bj4" },
+          { name: 'Clamshells', sets: '3', reps: '15', note: 'De lado.', youtubeId: "rgljhH1X4vc" },
+          { name: 'Toques de talón', sets: '3', reps: '20', note: 'Boca arriba.', youtubeId: "m8lSq4SC_eM" }
+        ]},
+        { day: 'Día 4', title: 'Core y Brazos', exercises: [
+          { name: 'Flutter Kicks', sets: '3', reps: '30 seg', note: 'Manos bajo glúteos.', youtubeId: "ybdeVE83b4E" },
+          { name: 'Plancha lateral', sets: '3', reps: '20 seg', note: 'Oblicuos.', youtubeId: "vyLwEzLWe_g" },
+          { name: 'Superman holds', sets: '3', reps: '15 seg', note: 'Zona lumbar suave.', youtubeId: "ww-6lRXvI9Y" }
+        ]},
+        { day: 'Día 5', title: 'Cadera', exercises: [
+          { name: 'Peso Muerto Rumano', sets: '3', reps: '15', note: 'Rodillas casi estiradas.', youtubeId: "mYWE12heiDA" },
+          { name: 'Puente Isométrico', sets: '3', reps: '45 seg', note: 'Mantén cadera arriba.', youtubeId: "LkCJxld5Bj4" },
+          { name: 'Elevación piernas', sets: '3', reps: '15', note: 'Piernas rectas.', youtubeId: "HrxOWhPdsOY" }
+        ]}
       ]
     }
   };
 
-  // Inject supplements dynamically
   const profiles = JSON.parse(JSON.stringify(rawProfiles));
   if (suppType.protein) {
-    profiles.Andros.nutrition.meals[1].options.push({
-      name: 'Opción 3 (Rápida): Batido Proteico',
-      items: [{scale: '30g Proteína en polvo (1 scoop)', noScale: '1 Scoop de Proteína'}, {scale: '100g Avena o Plátano', noScale: '1/2 Taza avena o 1 plátano'}, {scale: '15g Crema cacahuate', noScale: '1 Cda. crema de cacahuate'}]
-    });
-    profiles.Charlotte.nutrition.meals[1].options.push({
-      name: 'Opción 3 (Rápida): Batido Proteico',
-      items: [{scale: '30g Proteína en polvo (1 scoop)', noScale: '1 Scoop de Proteína'}, {scale: '100g Fruta (Fresa/Plátano)', noScale: '1 Taza fresas o 1 plátano'}, {scale: '10g Almendras', noScale: 'Puñito de almendras'}]
+    Object.keys(profiles).forEach(p => {
+      profiles[p].nutrition.meals[1].options.push({
+        name: 'Opción 3 (Rápida): Batido',
+        items: [{scale: '30g Proteína (1 scoop)', noScale: '1 Scoop'}, {scale: '100g Plátano', noScale: '1 Plátano'}, {scale: '15g Maní', noScale: '1 Cda. maní'}]
+      });
     });
   }
 
-  const currentProfile = profiles[activeProfile];
-  const currentPlan = currentProfile.workoutPlan;
-
-  const calculateProgress = (dayIndex) => {
-    let totalSets = 0;
-    let doneSets = 0;
-    currentPlan[dayIndex].exercises.forEach((ex, exIdx) => {
-      const sets = parseInt(ex.sets);
-      totalSets += sets;
-      for (let i = 0; i < sets; i++) {
-        if (completedSets[`${activeProfile}-${dayIndex}-${exIdx}-${i}`]) doneSets++;
-      }
-    });
-    return totalSets === 0 ? 0 : Math.round((doneSets / totalSets) * 100);
-  };
-
-  return (
-    <div className="min-h-screen bg-slate-50 font-sans pb-32">
-      <div className="bg-slate-900 text-white p-5 shadow-md sticky top-0 z-10">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-xl font-bold flex items-center gap-2">
-              <HeartPulse className="w-5 h-5 text-red-500" /> FitPlan Duo
-            </h1>
-            <p className="text-slate-300 text-sm mt-1">{currentProfile.goal}</p>
-          </div>
-          <button 
-            onClick={() => {
-              setActiveProfile(prev => prev === 'Andros' ? 'Charlotte' : 'Andros');
-              setActiveDay(0);
-            }}
-            className="flex items-center gap-2 bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-full text-sm font-medium hover:bg-slate-700 transition-colors"
-          >
-            <Users className="w-4 h-4 text-blue-400" />
-            {activeProfile}
+  // --- LOGIN SCREEN ---
+  if (!activeProfile) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 text-white font-sans">
+        <HeartPulse className="w-16 h-16 text-red-500 mb-6 animate-pulse" />
+        <h1 className="text-4xl font-black mb-2">FitPlan Duo</h1>
+        <p className="text-slate-400 mb-12 tracking-widest uppercase text-sm font-bold">Selecciona tu perfil</p>
+        
+        <div className="w-full max-w-sm space-y-4">
+          <button onClick={() => setActiveProfile('Andros')} className="w-full bg-blue-600 hover:bg-blue-700 text-white p-6 rounded-3xl font-black text-xl flex justify-between items-center transition-all active:scale-95 shadow-lg shadow-blue-900/50">
+            <span>ANDROS</span>
+            <Users className="w-6 h-6 opacity-50" />
+          </button>
+          <button onClick={() => setActiveProfile('Charlotte')} className="w-full bg-pink-600 hover:bg-pink-700 text-white p-6 rounded-3xl font-black text-xl flex justify-between items-center transition-all active:scale-95 shadow-lg shadow-pink-900/50">
+            <span>CHARLOTTE</span>
+            <Users className="w-6 h-6 opacity-50" />
           </button>
         </div>
       </div>
+    );
+  }
 
-      <div className="max-w-2xl mx-auto p-4">
-        {activeTab === 'entrenamiento' && (
-          <div className="space-y-4 animate-in fade-in duration-300">
-            <div className={`border rounded-lg p-3 flex items-start gap-3 ${activeProfile === 'Charlotte' ? 'bg-pink-50 border-pink-200 text-pink-800' : 'bg-amber-50 border-amber-200 text-amber-800'}`}>
-              <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
-              <div className="text-sm">
-                <strong>Precaución ({activeProfile}):</strong> {currentProfile.warning}
-              </div>
-            </div>
+  const currentProfile = profiles[activeProfile];
+  const currentPlan = currentProfile.workoutPlan[activeDay] || currentProfile.workoutPlan[0];
 
-            <div className="flex overflow-x-auto pb-2 gap-2 snap-x hide-scrollbar">
-              {currentPlan.map((day, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setActiveDay(idx)}
-                  className={`snap-start whitespace-nowrap px-4 py-2 rounded-full font-medium transition-colors ${
-                    activeDay === idx 
-                      ? 'bg-blue-600 text-white shadow-md' 
-                      : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-                  }`}
-                >
-                  {day.day}
-                </button>
-              ))}
-            </div>
+  const calculateTotalProgress = () => {
+    let total = 0, done = 0;
+    currentPlan.exercises.forEach((ex, exIdx) => {
+      const s = parseInt(ex.sets);
+      total += s;
+      for(let i=0; i<s; i++) if(completedSets[`${activeProfile}-${activeDay}-${exIdx}-${i}`]) done++;
+    });
+    return total === 0 ? 0 : Math.round((done/total)*100);
+  };
 
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-                <div>
-                  <h2 className="font-bold text-lg text-slate-800">{currentPlan[activeDay].title}</h2>
-                  <p className="text-sm text-slate-500">Progreso: {calculateProgress(activeDay)}%</p>
-                </div>
-                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
-                  {calculateProgress(activeDay)}%
-                </div>
-              </div>
+  const getDaysInMonth = () => new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+  const currentMonthName = new Date().toLocaleString('es-ES', { month: 'long' }).toUpperCase();
 
-              <div className="p-3 space-y-4">
-                {currentPlan[activeDay].exercises.map((exercise, exIdx) => {
-                  const numSets = parseInt(exercise.sets);
-                  const isTimeBased = exercise.reps.includes('seg') || exercise.reps.includes('min');
-                  const timeInSecs = isTimeBased ? parseInt(exercise.reps.match(/\d+/)[0]) : 0;
-                  // Si tiene "min" asume que el num es minutos
-                  const finalTimeInSecs = exercise.reps.includes('min') ? timeInSecs * 60 : timeInSecs;
+  const currentExercise = currentPlan.exercises[activeExerciseIdx];
+  const isTimeBased = currentExercise.reps.toLowerCase().includes('seg') || currentExercise.reps.toLowerCase().includes('min');
+  const timeValue = parseInt(currentExercise.reps.match(/\d+/)?.[0] || 0);
+  const finalTime = currentExercise.reps.toLowerCase().includes('min') ? timeValue * 60 : timeValue;
+  const numSets = parseInt(currentExercise.sets);
 
-                  return (
-                    <div key={exIdx} className="p-4 rounded-xl border-2 border-slate-100 bg-white">
-                      <div className="flex gap-3 mb-2">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-lg text-slate-800 leading-tight mb-1">{exercise.name}</h3>
-                          <p className="text-sm font-medium text-blue-600">Obj: {exercise.reps}</p>
-                          <p className="text-sm text-slate-600 mt-1 leading-snug">{exercise.note}</p>
-                        </div>
-                      </div>
-
-                      <ExerciseMedia src={exercise.gif} alt={exercise.name} exerciseName={exercise.name} />
-                      
-                      {/* Burbujas de Series */}
-                      <div className="mt-4 border-t border-slate-100 pt-3">
-                        <p className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Marcar Series ({numSets})</p>
-                        <div className="flex flex-wrap gap-2">
-                          {Array.from({ length: numSets }).map((_, setIdx) => {
-                            const setKey = `${activeProfile}-${activeDay}-${exIdx}-${setIdx}`;
-                            const isDone = completedSets[setKey];
-                            const isActiveWork = activeWorkSet === setKey;
-
-                            return (
-                              <button
-                                key={setIdx}
-                                onClick={() => toggleSet(activeDay, exIdx, setIdx, isTimeBased, finalTimeInSecs, exercise.name)}
-                                className={`h-12 flex items-center justify-center font-bold text-sm transition-all border-2 rounded-xl
-                                  ${isTimeBased ? 'px-4' : 'w-12'}
-                                  ${isActiveWork ? 'bg-amber-500 border-amber-600 text-white animate-pulse shadow-md' :
-                                    isDone ? 'bg-green-500 border-green-600 text-white' :
-                                    'bg-slate-50 border-slate-200 text-slate-500 hover:border-blue-400'}`}
-                              >
-                                {isActiveWork ? (
-                                  <span className="flex items-center gap-1"><Timer className="w-4 h-4" /> {timeLeft}s</span>
-                                ) : isDone ? (
-                                  <CheckCircle2 className="w-6 h-6" />
-                                ) : isTimeBased ? (
-                                  <span className="flex items-center gap-1"><Play className="w-4 h-4 ml-0.5" fill="currentColor"/> {finalTimeInSecs}s</span>
-                                ) : (
-                                  setIdx + 1
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'nutricion' && (
-          <div className="space-y-4 animate-in fade-in duration-300">
-            
-            {/* Módulo de Suplementación */}
-            <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-              <h2 className="font-bold text-lg mb-3 flex items-center gap-2 text-slate-800">
-                <Beaker className="w-5 h-5 text-indigo-500" /> Suplementación
-              </h2>
-
-              {suppStatus === 'none' && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-200">
-                    <span className="text-sm font-medium text-slate-700">¿Tomas suplementos?</span>
-                    <button onClick={() => setSuppStatus('taking')} className="bg-indigo-100 text-indigo-700 px-4 py-1.5 rounded-full text-sm font-bold hover:bg-indigo-200 transition-colors">Sí, activarlos</button>
-                  </div>
-                  <button onClick={() => setSuppStatus('suggest')} className="w-full bg-white border-2 border-slate-200 text-slate-600 py-2 rounded-lg text-sm font-bold hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
-                    <Info className="w-4 h-4" /> Ver sugerencias
-                  </button>
-                </div>
-              )}
-
-              {suppStatus === 'taking' && (
-                <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
-                  <p className="text-sm font-medium text-indigo-900 mb-3">Selecciona lo que consumes (Afectará tu menú):</p>
-                  <div className="space-y-2">
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input type="checkbox" checked={suppType.protein} onChange={(e) => setSuppType({...suppType, protein: e.target.checked})} className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500" />
-                      <span className="text-sm text-slate-700">Proteína en polvo (Añade opción de batido)</span>
-                    </label>
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input type="checkbox" checked={suppType.creatine} onChange={(e) => setSuppType({...suppType, creatine: e.target.checked})} className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500" />
-                      <span className="text-sm text-slate-700">Creatina (5g diarios)</span>
-                    </label>
-                  </div>
-                  <button onClick={() => setSuppStatus('none')} className="mt-4 text-xs text-indigo-600 underline">Ocultar</button>
-                </div>
-              )}
-
-              {suppStatus === 'suggest' && (
-                <div className="bg-amber-50 p-4 rounded-lg border border-amber-100">
-                  <h3 className="font-bold text-amber-900 mb-2">Recomendaciones:</h3>
-                  <ul className="text-sm text-amber-800 space-y-2 mb-4">
-                    <li><strong>1. Proteína Whey:</strong> Solo si te cuesta llegar a tu meta de proteína con comida sólida.</li>
-                    <li><strong>2. Creatina Monohidratada:</strong> 5g al día. Excelente para ganar fuerza, proteger músculo y rendir mejor. Muy segura.</li>
-                  </ul>
-                  <div className="flex gap-2">
-                    <button onClick={() => setSuppStatus('taking')} className="flex-1 bg-amber-200 text-amber-900 py-1.5 rounded-lg text-xs font-bold hover:bg-amber-300">Ya los tengo</button>
-                    <button onClick={() => setSuppStatus('none')} className="flex-1 bg-white text-amber-700 border border-amber-200 py-1.5 rounded-lg text-xs font-bold hover:bg-amber-100">Cerrar</button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-              <h2 className="font-bold text-lg mb-4 flex items-center gap-2">
-                <Apple className="w-5 h-5 text-red-500" /> Plan Base: {activeProfile}
-              </h2>
-              
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-center">
-                  <p className="text-xs text-slate-500 uppercase font-bold">Calorías</p>
-                  <p className="text-xl font-bold text-slate-800">{currentProfile.nutrition.calories}</p>
-                </div>
-                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-center">
-                  <p className="text-xs text-slate-500 uppercase font-bold">Proteína</p>
-                  <p className="text-xl font-bold text-blue-600">{currentProfile.nutrition.protein}</p>
-                </div>
-              </div>
-
-              <div className="flex bg-slate-100 rounded-lg overflow-hidden h-8 mb-5">
-                <div className="w-2/3 bg-slate-800 text-xs text-white flex items-center justify-center font-medium">Ayuno (16h)</div>
-                <div className="w-1/3 bg-green-500 text-xs text-white flex items-center justify-center font-medium">Comida (8h)</div>
-              </div>
-
-              <div className="flex bg-slate-200 p-1 rounded-lg mb-4">
-                <button 
-                  onClick={() => setUseScale(true)}
-                  className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${useScale ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                >
-                  Con Báscula
-                </button>
-                <button 
-                  onClick={() => setUseScale(false)}
-                  className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${!useScale ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                >
-                  Medidas Caseras
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                {currentProfile.nutrition.meals.map((meal, idx) => {
-                  const selectedOptIdx = getSelectedMealOption(idx);
-                  // Safeguard if option was removed
-                  const actualIdx = selectedOptIdx < meal.options.length ? selectedOptIdx : 0;
-                  const selectedOption = meal.options[actualIdx];
-                  
-                  return (
-                    <div key={idx} className="bg-white p-4 rounded-xl border-2 border-slate-200 shadow-sm">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wide">
-                          {meal.time}
-                        </span>
-                        <h4 className="font-bold text-sm text-slate-800">{meal.title}</h4>
-                      </div>
-
-                      <div className="relative mb-3">
-                        <select 
-                          className="w-full bg-slate-50 border border-slate-300 text-slate-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 appearance-none font-medium"
-                          value={actualIdx}
-                          onChange={(e) => handleMealChange(idx, e.target.value)}
-                        >
-                          {meal.options.map((opt, optIdx) => (
-                            <option key={optIdx} value={optIdx}>{opt.name}</option>
-                          ))}
-                        </select>
-                        <ChevronDown className="absolute right-3 top-3 w-4 h-4 text-slate-500 pointer-events-none" />
-                      </div>
-
-                      <ul className="space-y-2 mt-2">
-                        {selectedOption.items.map((item, itemIdx) => (
-                          <li key={itemIdx} className="flex items-start gap-2 text-sm text-slate-700">
-                            <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
-                            <span>{useScale ? item.scale : item.noScale}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {activeTab === 'entrenamiento' && (
-        <div className="fixed bottom-[72px] left-0 right-0 p-3 pointer-events-none z-30">
-          <div className={`max-w-sm mx-auto text-white rounded-2xl shadow-xl p-3 flex items-center justify-between pointer-events-auto border transition-colors duration-300 ${timerMode === 'work' ? 'bg-red-600 border-red-500' : 'bg-slate-800 border-slate-700'}`}>
-            <div className="flex flex-col ml-2">
-              <span className="text-[10px] uppercase font-bold tracking-widest opacity-80 mb-0.5">
-                {timerMode === 'work' ? `🔥 EN ACCIÓN` : '☕ DESCANSO'}
-              </span>
-              <div className="flex items-center gap-2">
-                <Timer className={`w-5 h-5 ${isTimerRunning ? 'animate-pulse' : 'opacity-70'}`} />
-                <span className={`text-2xl font-mono font-bold leading-none ${timeLeft <= 3 ? 'text-amber-300' : ''}`}>
-                  {formatTime(timeLeft)}
-                </span>
-              </div>
+  return (
+    <div className="min-h-screen bg-slate-50 font-sans pb-44">
+      
+      {/* MODAL DE ESFUERZO ADAPTATIVO */}
+      {showExertionModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-[2rem] p-6 w-full max-w-sm shadow-2xl border-4 border-slate-100 transform transition-all">
+            <div className="bg-blue-50 text-blue-800 p-4 rounded-2xl mb-6 flex gap-3 items-start border border-blue-100">
+              <Brain className="w-8 h-8 shrink-0 text-blue-500" />
+              <p className="text-xs font-black leading-relaxed italic">{currentMotivation}</p>
             </div>
             
-            <div className="flex gap-2 items-center">
-              {timerMode === 'rest' && (
-                <>
-                  <button onClick={() => resetTimer(60)} className="px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 rounded-lg font-medium transition-colors">60s</button>
-                  <button onClick={() => resetTimer(90)} className="px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 rounded-lg font-medium transition-colors">90s</button>
-                </>
-              )}
-              <button onClick={toggleTimer} className={`p-2 rounded-lg transition-colors ${isTimerRunning ? 'bg-amber-500 text-amber-950' : 'bg-white text-slate-800'}`}>
-                {isTimerRunning ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" fill="currentColor" />}
+            <h3 className="text-xl font-black text-slate-800 text-center uppercase tracking-tight mb-2">Evaluación de Fatiga</h3>
+            <p className="text-center text-sm font-bold text-slate-500 mb-6">Ajustando temporizador para el siguiente ejercicio</p>
+            
+            <div className="space-y-3">
+              <button onClick={() => handleExertionResponse(120)} className="w-full bg-red-50 hover:bg-red-100 text-red-700 p-4 rounded-2xl font-black border-2 border-red-200 transition-all active:scale-95 flex justify-between items-center">
+                <span>ALTO (Muy cansado)</span>
+                <span className="bg-red-200 px-3 py-1 rounded-full text-xs">120s Rest</span>
+              </button>
+              <button onClick={() => handleExertionResponse(90)} className="w-full bg-amber-50 hover:bg-amber-100 text-amber-700 p-4 rounded-2xl font-black border-2 border-amber-200 transition-all active:scale-95 flex justify-between items-center">
+                <span>MEDIO (Puedo seguir)</span>
+                <span className="bg-amber-200 px-3 py-1 rounded-full text-xs">90s Rest</span>
+              </button>
+              <button onClick={() => handleExertionResponse(60)} className="w-full bg-green-50 hover:bg-green-100 text-green-700 p-4 rounded-2xl font-black border-2 border-green-200 transition-all active:scale-95 flex justify-between items-center">
+                <span>BAJO (Imparable)</span>
+                <span className="bg-green-200 px-3 py-1 rounded-full text-xs">60s Rest</span>
               </button>
             </div>
           </div>
         </div>
       )}
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] z-40">
-        <div className="max-w-2xl mx-auto flex justify-around p-2 pb-safe">
-          <button 
-            onClick={() => setActiveTab('entrenamiento')}
-            className={`flex flex-col items-center p-2 w-24 rounded-xl transition-colors ${activeTab === 'entrenamiento' ? 'text-blue-600 bg-blue-50' : 'text-slate-500 hover:bg-slate-50'}`}
-          >
-            <Activity className="w-6 h-6 mb-1" />
-            <span className="text-[10px] font-bold uppercase tracking-wider">Rutina</span>
+      {/* HEADER VERCEL */}
+      <div className="bg-slate-900 text-white p-5 shadow-md sticky top-0 z-20">
+        <div className="flex justify-between items-center max-w-2xl mx-auto">
+          <div>
+            <h1 className="text-xl font-bold flex items-center gap-2 text-white">
+              <HeartPulse className="w-5 h-5 text-red-500" /> FitPlan Duo
+            </h1>
+            <p className="text-slate-400 text-[10px] mt-0.5 uppercase font-bold tracking-widest">{activeProfile}: {currentProfile.goal}</p>
+          </div>
+          <button onClick={() => setActiveProfile(null)} className="bg-slate-800 border border-slate-700 p-2.5 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-red-900/50 hover:border-red-800 hover:text-red-400 transition-colors">
+            <LogOut className="w-4 h-4" />
           </button>
-          
-          <button 
-            onClick={() => setActiveTab('nutricion')}
-            className={`flex flex-col items-center p-2 w-24 rounded-xl transition-colors ${activeTab === 'nutricion' ? 'text-blue-600 bg-blue-50' : 'text-slate-500 hover:bg-slate-50'}`}
-          >
-            <Apple className="w-6 h-6 mb-1" />
-            <span className="text-[10px] font-bold uppercase tracking-wider">Dieta</span>
+        </div>
+      </div>
+
+      <div className="max-w-2xl mx-auto p-4 space-y-4">
+        
+        {/* --- PESTAÑA ENTRENAMIENTO --- */}
+        {activeTab === 'entrenamiento' && (
+          <div className="space-y-4 animate-in fade-in duration-300">
+            <div className={`p-3 rounded-xl flex items-start gap-3 text-sm ${activeProfile==='Charlotte'?'bg-pink-50 border-pink-100 text-pink-800':'bg-amber-50 border-amber-100 text-amber-800'} border shadow-sm`}>
+              <AlertTriangle className="w-5 h-5 shrink-0" />
+              <p><strong>Aviso Técnico:</strong> {currentProfile.warning}</p>
+            </div>
+
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              {currentProfile.workoutPlan.map((d, i) => (
+                <button key={i} onClick={() => setActiveDay(i)} className={`px-5 py-2 rounded-full text-sm font-bold transition-all shrink-0 ${activeDay===i?'bg-blue-600 text-white shadow-lg shadow-blue-200':'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}>
+                  {d.day}
+                </button>
+              ))}
+            </div>
+
+            {/* CARRUSEL DE EJERCICIOS (UNO POR UNO) */}
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden relative">
+              <div className="p-6 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                <h2 className="font-black text-xl text-slate-800 uppercase tracking-tighter">{currentPlan.title}</h2>
+                <div className="text-right">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Global</p>
+                  <p className="text-xl font-black text-blue-600">{calculateTotalProgress()}%</p>
+                </div>
+              </div>
+
+              <div className="p-5">
+                <div className="flex justify-between items-center mb-6">
+                  <span className="bg-blue-100 text-blue-800 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">
+                    Ejercicio {activeExerciseIdx + 1} de {currentPlan.exercises.length}
+                  </span>
+                  
+                  {/* Navegación manual */}
+                  <div className="flex gap-2">
+                    <button onClick={() => setActiveExerciseIdx(Math.max(0, activeExerciseIdx - 1))} disabled={activeExerciseIdx === 0} className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 disabled:opacity-30 active:bg-slate-200 transition-colors">
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <button onClick={() => setActiveExerciseIdx(Math.min(currentPlan.exercises.length - 1, activeExerciseIdx + 1))} disabled={activeExerciseIdx === currentPlan.exercises.length - 1} className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 disabled:opacity-30 active:bg-slate-200 transition-colors">
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="font-black text-slate-900 text-2xl leading-tight uppercase tracking-tight">{currentExercise.name}</h3>
+                  <p className="text-blue-600 font-black text-lg">{currentExercise.sets} SERIES x {currentExercise.reps}</p>
+                  <p className="text-sm font-bold text-slate-500 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">💡 {currentExercise.note}</p>
+                  
+                  <div className="pt-2">
+                    <YouTubeButton videoId={currentExercise.youtubeId} />
+                  </div>
+
+                  <div className="pt-4 border-t border-slate-100">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Toca para completar</p>
+                    <div className="flex flex-wrap gap-3">
+                      {Array.from({length: numSets}).map((_, sIdx) => {
+                        const key = `${activeProfile}-${activeDay}-${activeExerciseIdx}-${sIdx}`;
+                        const isDone = completedSets[key];
+                        const isWorking = activeWorkSet?.key === key;
+                        
+                        const baseClasses = "h-14 flex items-center justify-center rounded-2xl border-2 font-black transition-all shadow-sm active:scale-95";
+                        const statusClasses = isWorking 
+                          ? "w-28 bg-amber-500 border-amber-600 text-white animate-pulse" 
+                          : isDone 
+                            ? "w-14 bg-green-500 border-green-600 text-white" 
+                            : isTimeBased 
+                              ? "w-24 bg-slate-50 border-slate-200 text-slate-700 hover:border-blue-400 hover:bg-blue-50"
+                              : "w-14 bg-slate-50 border-slate-200 text-slate-700 hover:border-blue-400 hover:bg-blue-50";
+
+                        return (
+                          <button 
+                            key={sIdx} 
+                            onClick={() => toggleSet(activeDay, activeExerciseIdx, sIdx, isTimeBased, finalTime, numSets)} 
+                            className={`${baseClasses} ${statusClasses}`}
+                          >
+                            {isWorking ? (
+                              <span className="flex items-center gap-2"><Timer className="w-5 h-5"/> {timeLeft}s</span>
+                            ) : isDone ? (
+                              <CheckCircle2 className="w-7 h-7"/>
+                            ) : isTimeBased ? (
+                              <span className="flex items-center gap-1.5"><Play className="w-4 h-4 ml-0.5 fill-current"/> {finalTime}s</span>
+                            ) : (
+                              <span className="text-xl">{sIdx+1}</span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* --- PESTAÑA DIETA --- */}
+        {activeTab === 'nutricion' && (
+          <div className="space-y-4 animate-in fade-in duration-300 pb-20">
+             <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                <h2 className="font-bold text-lg mb-4 flex items-center gap-2 text-slate-800">
+                  <Beaker className="w-5 h-5 text-indigo-500"/> Suplementación
+                </h2>
+                
+                {suppStatus === 'none' && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-slate-700 font-bold uppercase tracking-tighter leading-tight">¿Consumes suplementos?</span>
+                      <button onClick={() => setSuppStatus('taking')} className="bg-blue-100 text-blue-700 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">Sí, Activar</button>
+                    </div>
+                    <button onClick={() => setSuppStatus('suggest')} className="w-full bg-white border border-slate-200 text-slate-600 py-2.5 rounded-xl text-[10px] font-black uppercase hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 tracking-widest">
+                      <Info className="w-4 h-4" /> Ver Sugerencias
+                    </button>
+                  </div>
+                )}
+
+                {suppStatus === 'taking' && (
+                  <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                    <div className="space-y-3">
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" checked={suppType.protein} onChange={e => setSuppType({...suppType, protein: e.target.checked})} className="w-6 h-6 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300"/>
+                        <span className="text-sm font-bold text-slate-700 uppercase tracking-tight">Proteína en Polvo (Whey)</span>
+                      </label>
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" checked={suppType.creatine} onChange={e => setSuppType({...suppType, creatine: e.target.checked})} className="w-6 h-6 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300"/>
+                        <span className="text-sm font-bold text-slate-700 uppercase tracking-tight">Creatina (5g Diarios)</span>
+                      </label>
+                    </div>
+                    <button onClick={() => setSuppStatus('none')} className="mt-4 text-[10px] text-indigo-600 font-black uppercase tracking-widest underline decoration-2">Guardar y Cerrar</button>
+                  </div>
+                )}
+
+                {suppStatus === 'suggest' && (
+                  <div className="bg-amber-50 p-4 rounded-xl border border-amber-100">
+                    <ul className="text-xs text-amber-800 space-y-2 font-bold leading-relaxed mb-4">
+                      <li>• <strong>Proteína:</strong> Si no llegas a tu meta diaria con comida.</li>
+                      <li>• <strong>Creatina:</strong> Confiable para fuerza y recuperación.</li>
+                    </ul>
+                    <div className="flex gap-2">
+                      <button onClick={() => setSuppStatus('taking')} className="flex-1 bg-amber-200 text-amber-900 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95">Configurar</button>
+                      <button onClick={() => setSuppStatus('none')} className="flex-1 bg-white text-amber-700 border border-amber-200 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95">Ocultar</button>
+                    </div>
+                  </div>
+                )}
+             </div>
+
+             <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="font-bold text-lg flex items-center gap-2 text-slate-800">
+                    <Apple className="w-5 h-5 text-red-500"/> Plan Base
+                  </h2>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-center">
+                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-1">Calorías</p>
+                    <p className="text-xl font-bold text-slate-800">{currentProfile.nutrition.calories}</p>
+                  </div>
+                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-center">
+                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-1">Proteína</p>
+                    <p className="text-xl font-bold text-blue-600">{currentProfile.nutrition.protein}</p>
+                  </div>
+                </div>
+
+                <div className="flex bg-slate-100 rounded-lg overflow-hidden h-8 mb-5 border border-slate-200">
+                  <div className="w-2/3 bg-slate-800 text-[10px] text-white flex items-center justify-center font-bold uppercase tracking-widest">Ayuno (16h)</div>
+                  <div className="w-1/3 bg-green-500 text-[10px] text-white flex items-center justify-center font-bold uppercase tracking-widest">Comida (8h)</div>
+                </div>
+
+                <div className="flex bg-slate-200 p-1 rounded-lg mb-6 border border-slate-200 shadow-inner">
+                  <button onClick={() => setUseScale(true)} className={`flex-1 py-2 text-[10px] font-bold rounded-md transition-all uppercase tracking-widest ${useScale ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}>Con Báscula</button>
+                  <button onClick={() => setUseScale(false)} className={`flex-1 py-2 text-[10px] font-bold rounded-md transition-all uppercase tracking-widest ${!useScale ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}>Medidas Caseras</button>
+                </div>
+                
+                <div className="space-y-4">
+                  {currentProfile.nutrition.meals.map((meal, mIdx) => {
+                    const selIdx = getSelectedMealOption(mIdx);
+                    const safeIdx = selIdx < meal.options.length ? selIdx : 0;
+                    return (
+                      <div key={mIdx} className="bg-white p-4 rounded-xl border-2 border-slate-100 shadow-sm">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="bg-blue-100 text-blue-800 text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider">{meal.time}</span>
+                          <h4 className="font-bold text-slate-800 text-sm uppercase tracking-tight">{meal.title}</h4>
+                        </div>
+                        <div className="relative mb-4">
+                          <select className="w-full bg-slate-50 border-2 border-slate-100 text-sm font-bold rounded-xl h-11 px-4 appearance-none focus:border-blue-400 outline-none" value={safeIdx} onChange={e => handleMealChange(mIdx, e.target.value)}>
+                            {meal.options.map((o, oi) => <option key={oi} value={oi}>{o.name}</option>)}
+                          </select>
+                          <ChevronDown className="absolute right-3 top-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
+                        </div>
+                        <ul className="space-y-2">
+                          {meal.options[safeIdx].items.map((it, iti) => (
+                            <li key={iti} className="text-xs font-bold text-slate-700 flex items-start gap-2">
+                              <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
+                              <span>{useScale ? it.scale : it.noScale}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    );
+                  })}
+                </div>
+             </div>
+          </div>
+        )}
+
+        {/* --- PESTAÑA PROGRESO (CALENDARIO) --- */}
+        {activeTab === 'progreso' && (
+          <div className="space-y-4 animate-in fade-in duration-300 pb-20">
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+              <div className="p-6 bg-slate-50 border-b border-slate-200">
+                <h2 className="font-black text-xl text-slate-800 uppercase tracking-tighter flex items-center gap-2">
+                  <CalendarIcon className="w-6 h-6 text-blue-600" /> Historial
+                </h2>
+                <p className="text-xs font-bold text-slate-500 mt-1 uppercase tracking-widest">{currentMonthName}</p>
+              </div>
+              <div className="p-5">
+                <p className="text-xs text-slate-500 font-bold mb-4 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                  Toca un día para marcarlo manualmente. Los días se marcan automáticamente al terminar una rutina.
+                </p>
+                <div className="grid grid-cols-7 gap-2">
+                  {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((day, i) => (
+                    <div key={i} className="text-center text-[10px] font-black text-slate-400 uppercase">{day}</div>
+                  ))}
+                  {Array.from({length: getDaysInMonth()}).map((_, i) => {
+                    const d = new Date();
+                    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(i+1).padStart(2, '0')}`;
+                    const isDone = calendarData[`${dateStr}-${activeProfile}`];
+                    const isToday = (i+1) === d.getDate();
+
+                    return (
+                      <button 
+                        key={i}
+                        onClick={() => toggleCalendarDay(i + 1)}
+                        className={`aspect-square flex flex-col items-center justify-center rounded-xl font-black text-sm transition-all border-2 active:scale-90
+                          ${isDone ? 'bg-green-500 border-green-600 text-white shadow-sm' : 
+                            isToday ? 'bg-blue-50 border-blue-200 text-blue-700' : 
+                            'bg-white border-slate-100 text-slate-600 hover:border-slate-300'}`}
+                      >
+                        {i + 1}
+                        {isDone && <CheckCircle2 className="w-3 h-3 mt-0.5 opacity-90" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Temporizador Flotante */}
+      {activeTab === 'entrenamiento' && (
+        <div className="fixed bottom-[96px] left-0 right-0 p-4 pointer-events-none z-30">
+          <div className={`max-w-md mx-auto rounded-3xl shadow-2xl p-5 flex items-center justify-between pointer-events-auto border-2 transition-all ${timerMode==='work'?'bg-red-600 border-red-400 shadow-red-500/30':'bg-slate-900 border-slate-800'} text-white`}>
+            <div className="flex items-center gap-4">
+              <div className={`p-4 rounded-2xl ${timerMode==='work'?'bg-red-500':'bg-slate-800'}`}>
+                <Timer className={`w-7 h-7 ${isTimerRunning?'animate-pulse':''}`}/>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black uppercase tracking-widest opacity-60 leading-none mb-1">{timerMode==='work'?'🔥 Esfuerzo':'☕ Descanso'}</span>
+                <span className="text-3xl font-mono font-black tabular-nums">{formatTime(timeLeft)}</span>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              {timerMode === 'rest' && (
+                <>
+                  <button onClick={() => resetTimer(60)} className="h-12 px-4 bg-slate-800 hover:bg-slate-700 rounded-2xl font-black text-xs border border-slate-700 transition-colors uppercase tracking-widest active:scale-95">60s</button>
+                  <button onClick={() => resetTimer(90)} className="h-12 px-4 bg-slate-800 hover:bg-slate-700 rounded-2xl font-black text-xs border border-slate-700 transition-colors uppercase tracking-widest active:scale-95">90s</button>
+                </>
+              )}
+              <button onClick={toggleTimer} className={`w-14 h-12 flex items-center justify-center rounded-2xl transition-all ${isTimerRunning?'bg-amber-500 text-amber-950':'bg-white text-slate-950 shadow-lg active:scale-90'}`}>
+                {isTimerRunning ? <Pause className="w-7 h-7" /> : <Play className="w-7 h-7 ml-1" fill="currentColor"/>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Navegación Inferior (3 Botones) */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 pb-safe shadow-[0_-8px_30px_rgb(0,0,0,0.06)]">
+        <div className="max-w-2xl mx-auto flex justify-between px-6 py-3">
+          <button onClick={() => setActiveTab('entrenamiento')} className={`flex flex-col items-center p-2 rounded-2xl transition-all w-20 ${activeTab==='entrenamiento'?'text-blue-600 bg-blue-50 shadow-inner border border-blue-100':'text-slate-400 hover:text-slate-600'}`}>
+            <Activity className="w-6 h-6 mb-1"/>
+            <span className="text-[9px] font-black uppercase tracking-widest">Rutina</span>
+          </button>
+          <button onClick={() => setActiveTab('progreso')} className={`flex flex-col items-center p-2 rounded-2xl transition-all w-20 ${activeTab==='progreso'?'text-blue-600 bg-blue-50 shadow-inner border border-blue-100':'text-slate-400 hover:text-slate-600'}`}>
+            <CalendarIcon className="w-6 h-6 mb-1"/>
+            <span className="text-[9px] font-black uppercase tracking-widest">Avance</span>
+          </button>
+          <button onClick={() => setActiveTab('nutricion')} className={`flex flex-col items-center p-2 rounded-2xl transition-all w-20 ${activeTab==='nutricion'?'text-blue-600 bg-blue-50 shadow-inner border border-blue-100':'text-slate-400 hover:text-slate-600'}`}>
+            <Apple className="w-6 h-6 mb-1"/>
+            <span className="text-[9px] font-black uppercase tracking-widest">Dieta</span>
           </button>
         </div>
       </div>
