@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, Apple, CheckCircle2, AlertTriangle, Timer, Play, Pause, Users, HeartPulse, ChevronDown, Info, Beaker, Youtube, LogOut, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Brain } from 'lucide-react';
+import { Activity, Apple, CheckCircle2, AlertTriangle, Timer, Play, Pause, Users, HeartPulse, ChevronDown, Info, Beaker, LogOut, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Brain } from 'lucide-react';
 
 const YouTubeButton = ({ videoId }) => {
   const openTutorial = () => {
@@ -11,7 +11,7 @@ const YouTubeButton = ({ videoId }) => {
   if (!videoId) return null;
   return (
     <button onClick={openTutorial} className="w-full h-14 bg-red-600 hover:bg-red-700 text-white rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-95 shadow-sm mb-4">
-      <Youtube className="w-6 h-6" />
+      <Play className="w-6 h-6 fill-current" />
       <div className="flex flex-col items-start text-left">
         <span className="font-black text-sm leading-none">Ver Técnica</span>
         <span className="text-[10px] opacity-80 uppercase tracking-wider">YouTube Short</span>
