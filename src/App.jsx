@@ -2,7 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Activity, Apple, CheckCircle2, AlertTriangle, Timer, Play, Pause, Users, HeartPulse, ChevronDown, Info, Beaker, Youtube, LogOut, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Brain } from 'lucide-react';
 
 const YouTubeButton = ({ videoId }) => {
-  const openTutorial = () => window.open(`https://www.youtube.com/shorts/${videoId}`, '_blank', 'noopener,noreferrer');
+  const openTutorial = () => {
+    if (typeof window !== 'undefined') {
+      window.open(`https://www.youtube.com/shorts/${videoId}`, '_blank', 'noopener,noreferrer');
+    }
+  };
+  
   if (!videoId) return null;
   return (
     <button onClick={openTutorial} className="w-full h-14 bg-red-600 hover:bg-red-700 text-white rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-95 shadow-sm mb-4">
@@ -33,12 +38,12 @@ export default function App() {
   const [activeExerciseIdx, setActiveExerciseIdx] = useState(0);
   const [useScale, setUseScale] = useState(true);
   
-  // Persistencia de datos local (simulada en estado para este ejemplo)
+  // Persistencia de datos local
   const [completedSets, setCompletedSets] = useState({}); 
   const [mealSelections, setMealSelections] = useState({});
   const [suppStatus, setSuppStatus] = useState('none'); 
   const [suppType, setSuppType] = useState({ protein: false, creatine: false });
-  const [calendarData, setCalendarData] = useState({}); // Formato: 'YYYY-MM-DD-Profile': true
+  const [calendarData, setCalendarData] = useState({});
 
   // Temporizador Adaptativo
   const [timeLeft, setTimeLeft] = useState(60);
@@ -51,8 +56,11 @@ export default function App() {
   const [currentMotivation, setCurrentMotivation] = useState("");
 
   const playBeep = () => {
+    if (typeof window === 'undefined') return;
     try {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      
       const ctx = new AudioContext();
       const playTone = (time, duration) => {
         const osc = ctx.createOscillator();
@@ -70,7 +78,9 @@ export default function App() {
       playTone(now, 0.4);
       playTone(now + 0.6, 0.4);
       playTone(now + 1.2, 0.6); // 3 pitidos largos y claros
-    } catch (e) { console.log("Audio no disponible"); }
+    } catch (e) { 
+      console.log("Audio no disponible"); 
+    }
   };
 
   useEffect(() => {
@@ -351,7 +361,7 @@ export default function App() {
         </div>
       )}
 
-      {/* HEADER VERCEL */}
+      {/* HEADER */}
       <div className="bg-slate-900 text-white p-5 shadow-md sticky top-0 z-20">
         <div className="flex justify-between items-center max-w-2xl mx-auto">
           <div>
@@ -360,309 +370,4 @@ export default function App() {
             </h1>
             <p className="text-slate-400 text-[10px] mt-0.5 uppercase font-bold tracking-widest">{activeProfile}: {currentProfile.goal}</p>
           </div>
-          <button onClick={() => setActiveProfile(null)} className="bg-slate-800 border border-slate-700 p-2.5 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-red-900/50 hover:border-red-800 hover:text-red-400 transition-colors">
-            <LogOut className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      <div className="max-w-2xl mx-auto p-4 space-y-4">
-        
-        {/* --- PESTAÑA ENTRENAMIENTO --- */}
-        {activeTab === 'entrenamiento' && (
-          <div className="space-y-4 animate-in fade-in duration-300">
-            <div className={`p-3 rounded-xl flex items-start gap-3 text-sm ${activeProfile==='Charlotte'?'bg-pink-50 border-pink-100 text-pink-800':'bg-amber-50 border-amber-100 text-amber-800'} border shadow-sm`}>
-              <AlertTriangle className="w-5 h-5 shrink-0" />
-              <p><strong>Aviso Técnico:</strong> {currentProfile.warning}</p>
-            </div>
-
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-              {currentProfile.workoutPlan.map((d, i) => (
-                <button key={i} onClick={() => setActiveDay(i)} className={`px-5 py-2 rounded-full text-sm font-bold transition-all shrink-0 ${activeDay===i?'bg-blue-600 text-white shadow-lg shadow-blue-200':'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}>
-                  {d.day}
-                </button>
-              ))}
-            </div>
-
-            {/* CARRUSEL DE EJERCICIOS (UNO POR UNO) */}
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden relative">
-              <div className="p-6 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-                <h2 className="font-black text-xl text-slate-800 uppercase tracking-tighter">{currentPlan.title}</h2>
-                <div className="text-right">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Global</p>
-                  <p className="text-xl font-black text-blue-600">{calculateTotalProgress()}%</p>
-                </div>
-              </div>
-
-              <div className="p-5">
-                <div className="flex justify-between items-center mb-6">
-                  <span className="bg-blue-100 text-blue-800 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">
-                    Ejercicio {activeExerciseIdx + 1} de {currentPlan.exercises.length}
-                  </span>
-                  
-                  {/* Navegación manual */}
-                  <div className="flex gap-2">
-                    <button onClick={() => setActiveExerciseIdx(Math.max(0, activeExerciseIdx - 1))} disabled={activeExerciseIdx === 0} className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 disabled:opacity-30 active:bg-slate-200 transition-colors">
-                      <ChevronLeft className="w-5 h-5" />
-                    </button>
-                    <button onClick={() => setActiveExerciseIdx(Math.min(currentPlan.exercises.length - 1, activeExerciseIdx + 1))} disabled={activeExerciseIdx === currentPlan.exercises.length - 1} className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 disabled:opacity-30 active:bg-slate-200 transition-colors">
-                      <ChevronRight className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="font-black text-slate-900 text-2xl leading-tight uppercase tracking-tight">{currentExercise.name}</h3>
-                  <p className="text-blue-600 font-black text-lg">{currentExercise.sets} SERIES x {currentExercise.reps}</p>
-                  <p className="text-sm font-bold text-slate-500 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">💡 {currentExercise.note}</p>
-                  
-                  <div className="pt-2">
-                    <YouTubeButton videoId={currentExercise.youtubeId} />
-                  </div>
-
-                  <div className="pt-4 border-t border-slate-100">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Toca para completar</p>
-                    <div className="flex flex-wrap gap-3">
-                      {Array.from({length: numSets}).map((_, sIdx) => {
-                        const key = `${activeProfile}-${activeDay}-${activeExerciseIdx}-${sIdx}`;
-                        const isDone = completedSets[key];
-                        const isWorking = activeWorkSet?.key === key;
-                        
-                        const baseClasses = "h-14 flex items-center justify-center rounded-2xl border-2 font-black transition-all shadow-sm active:scale-95";
-                        const statusClasses = isWorking 
-                          ? "w-28 bg-amber-500 border-amber-600 text-white animate-pulse" 
-                          : isDone 
-                            ? "w-14 bg-green-500 border-green-600 text-white" 
-                            : isTimeBased 
-                              ? "w-24 bg-slate-50 border-slate-200 text-slate-700 hover:border-blue-400 hover:bg-blue-50"
-                              : "w-14 bg-slate-50 border-slate-200 text-slate-700 hover:border-blue-400 hover:bg-blue-50";
-
-                        return (
-                          <button 
-                            key={sIdx} 
-                            onClick={() => toggleSet(activeDay, activeExerciseIdx, sIdx, isTimeBased, finalTime, numSets)} 
-                            className={`${baseClasses} ${statusClasses}`}
-                          >
-                            {isWorking ? (
-                              <span className="flex items-center gap-2"><Timer className="w-5 h-5"/> {timeLeft}s</span>
-                            ) : isDone ? (
-                              <CheckCircle2 className="w-7 h-7"/>
-                            ) : isTimeBased ? (
-                              <span className="flex items-center gap-1.5"><Play className="w-4 h-4 ml-0.5 fill-current"/> {finalTime}s</span>
-                            ) : (
-                              <span className="text-xl">{sIdx+1}</span>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* --- PESTAÑA DIETA --- */}
-        {activeTab === 'nutricion' && (
-          <div className="space-y-4 animate-in fade-in duration-300 pb-20">
-             <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                <h2 className="font-bold text-lg mb-4 flex items-center gap-2 text-slate-800">
-                  <Beaker className="w-5 h-5 text-indigo-500"/> Suplementación
-                </h2>
-                
-                {suppStatus === 'none' && (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-slate-700 font-bold uppercase tracking-tighter leading-tight">¿Consumes suplementos?</span>
-                      <button onClick={() => setSuppStatus('taking')} className="bg-blue-100 text-blue-700 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">Sí, Activar</button>
-                    </div>
-                    <button onClick={() => setSuppStatus('suggest')} className="w-full bg-white border border-slate-200 text-slate-600 py-2.5 rounded-xl text-[10px] font-black uppercase hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 tracking-widest">
-                      <Info className="w-4 h-4" /> Ver Sugerencias
-                    </button>
-                  </div>
-                )}
-
-                {suppStatus === 'taking' && (
-                  <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-                    <div className="space-y-3">
-                      <label className="flex items-center gap-3 cursor-pointer">
-                        <input type="checkbox" checked={suppType.protein} onChange={e => setSuppType({...suppType, protein: e.target.checked})} className="w-6 h-6 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300"/>
-                        <span className="text-sm font-bold text-slate-700 uppercase tracking-tight">Proteína en Polvo (Whey)</span>
-                      </label>
-                      <label className="flex items-center gap-3 cursor-pointer">
-                        <input type="checkbox" checked={suppType.creatine} onChange={e => setSuppType({...suppType, creatine: e.target.checked})} className="w-6 h-6 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300"/>
-                        <span className="text-sm font-bold text-slate-700 uppercase tracking-tight">Creatina (5g Diarios)</span>
-                      </label>
-                    </div>
-                    <button onClick={() => setSuppStatus('none')} className="mt-4 text-[10px] text-indigo-600 font-black uppercase tracking-widest underline decoration-2">Guardar y Cerrar</button>
-                  </div>
-                )}
-
-                {suppStatus === 'suggest' && (
-                  <div className="bg-amber-50 p-4 rounded-xl border border-amber-100">
-                    <ul className="text-xs text-amber-800 space-y-2 font-bold leading-relaxed mb-4">
-                      <li>• <strong>Proteína:</strong> Si no llegas a tu meta diaria con comida.</li>
-                      <li>• <strong>Creatina:</strong> Confiable para fuerza y recuperación.</li>
-                    </ul>
-                    <div className="flex gap-2">
-                      <button onClick={() => setSuppStatus('taking')} className="flex-1 bg-amber-200 text-amber-900 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95">Configurar</button>
-                      <button onClick={() => setSuppStatus('none')} className="flex-1 bg-white text-amber-700 border border-amber-200 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95">Ocultar</button>
-                    </div>
-                  </div>
-                )}
-             </div>
-
-             <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="font-bold text-lg flex items-center gap-2 text-slate-800">
-                    <Apple className="w-5 h-5 text-red-500"/> Plan Base
-                  </h2>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-center">
-                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-1">Calorías</p>
-                    <p className="text-xl font-bold text-slate-800">{currentProfile.nutrition.calories}</p>
-                  </div>
-                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-center">
-                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-1">Proteína</p>
-                    <p className="text-xl font-bold text-blue-600">{currentProfile.nutrition.protein}</p>
-                  </div>
-                </div>
-
-                <div className="flex bg-slate-100 rounded-lg overflow-hidden h-8 mb-5 border border-slate-200">
-                  <div className="w-2/3 bg-slate-800 text-[10px] text-white flex items-center justify-center font-bold uppercase tracking-widest">Ayuno (16h)</div>
-                  <div className="w-1/3 bg-green-500 text-[10px] text-white flex items-center justify-center font-bold uppercase tracking-widest">Comida (8h)</div>
-                </div>
-
-                <div className="flex bg-slate-200 p-1 rounded-lg mb-6 border border-slate-200 shadow-inner">
-                  <button onClick={() => setUseScale(true)} className={`flex-1 py-2 text-[10px] font-bold rounded-md transition-all uppercase tracking-widest ${useScale ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}>Con Báscula</button>
-                  <button onClick={() => setUseScale(false)} className={`flex-1 py-2 text-[10px] font-bold rounded-md transition-all uppercase tracking-widest ${!useScale ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}>Medidas Caseras</button>
-                </div>
-                
-                <div className="space-y-4">
-                  {currentProfile.nutrition.meals.map((meal, mIdx) => {
-                    const selIdx = getSelectedMealOption(mIdx);
-                    const safeIdx = selIdx < meal.options.length ? selIdx : 0;
-                    return (
-                      <div key={mIdx} className="bg-white p-4 rounded-xl border-2 border-slate-100 shadow-sm">
-                        <div className="flex items-center gap-2 mb-3">
-                          <span className="bg-blue-100 text-blue-800 text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider">{meal.time}</span>
-                          <h4 className="font-bold text-slate-800 text-sm uppercase tracking-tight">{meal.title}</h4>
-                        </div>
-                        <div className="relative mb-4">
-                          <select className="w-full bg-slate-50 border-2 border-slate-100 text-sm font-bold rounded-xl h-11 px-4 appearance-none focus:border-blue-400 outline-none" value={safeIdx} onChange={e => handleMealChange(mIdx, e.target.value)}>
-                            {meal.options.map((o, oi) => <option key={oi} value={oi}>{o.name}</option>)}
-                          </select>
-                          <ChevronDown className="absolute right-3 top-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
-                        </div>
-                        <ul className="space-y-2">
-                          {meal.options[safeIdx].items.map((it, iti) => (
-                            <li key={iti} className="text-xs font-bold text-slate-700 flex items-start gap-2">
-                              <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
-                              <span>{useScale ? it.scale : it.noScale}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    );
-                  })}
-                </div>
-             </div>
-          </div>
-        )}
-
-        {/* --- PESTAÑA PROGRESO (CALENDARIO) --- */}
-        {activeTab === 'progreso' && (
-          <div className="space-y-4 animate-in fade-in duration-300 pb-20">
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="p-6 bg-slate-50 border-b border-slate-200">
-                <h2 className="font-black text-xl text-slate-800 uppercase tracking-tighter flex items-center gap-2">
-                  <CalendarIcon className="w-6 h-6 text-blue-600" /> Historial
-                </h2>
-                <p className="text-xs font-bold text-slate-500 mt-1 uppercase tracking-widest">{currentMonthName}</p>
-              </div>
-              <div className="p-5">
-                <p className="text-xs text-slate-500 font-bold mb-4 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                  Toca un día para marcarlo manualmente. Los días se marcan automáticamente al terminar una rutina.
-                </p>
-                <div className="grid grid-cols-7 gap-2">
-                  {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((day, i) => (
-                    <div key={i} className="text-center text-[10px] font-black text-slate-400 uppercase">{day}</div>
-                  ))}
-                  {Array.from({length: getDaysInMonth()}).map((_, i) => {
-                    const d = new Date();
-                    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(i+1).padStart(2, '0')}`;
-                    const isDone = calendarData[`${dateStr}-${activeProfile}`];
-                    const isToday = (i+1) === d.getDate();
-
-                    return (
-                      <button 
-                        key={i}
-                        onClick={() => toggleCalendarDay(i + 1)}
-                        className={`aspect-square flex flex-col items-center justify-center rounded-xl font-black text-sm transition-all border-2 active:scale-90
-                          ${isDone ? 'bg-green-500 border-green-600 text-white shadow-sm' : 
-                            isToday ? 'bg-blue-50 border-blue-200 text-blue-700' : 
-                            'bg-white border-slate-100 text-slate-600 hover:border-slate-300'}`}
-                      >
-                        {i + 1}
-                        {isDone && <CheckCircle2 className="w-3 h-3 mt-0.5 opacity-90" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Temporizador Flotante */}
-      {activeTab === 'entrenamiento' && (
-        <div className="fixed bottom-[96px] left-0 right-0 p-4 pointer-events-none z-30">
-          <div className={`max-w-md mx-auto rounded-3xl shadow-2xl p-5 flex items-center justify-between pointer-events-auto border-2 transition-all ${timerMode==='work'?'bg-red-600 border-red-400 shadow-red-500/30':'bg-slate-900 border-slate-800'} text-white`}>
-            <div className="flex items-center gap-4">
-              <div className={`p-4 rounded-2xl ${timerMode==='work'?'bg-red-500':'bg-slate-800'}`}>
-                <Timer className={`w-7 h-7 ${isTimerRunning?'animate-pulse':''}`}/>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black uppercase tracking-widest opacity-60 leading-none mb-1">{timerMode==='work'?'🔥 Esfuerzo':'☕ Descanso'}</span>
-                <span className="text-3xl font-mono font-black tabular-nums">{formatTime(timeLeft)}</span>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              {timerMode === 'rest' && (
-                <>
-                  <button onClick={() => resetTimer(60)} className="h-12 px-4 bg-slate-800 hover:bg-slate-700 rounded-2xl font-black text-xs border border-slate-700 transition-colors uppercase tracking-widest active:scale-95">60s</button>
-                  <button onClick={() => resetTimer(90)} className="h-12 px-4 bg-slate-800 hover:bg-slate-700 rounded-2xl font-black text-xs border border-slate-700 transition-colors uppercase tracking-widest active:scale-95">90s</button>
-                </>
-              )}
-              <button onClick={toggleTimer} className={`w-14 h-12 flex items-center justify-center rounded-2xl transition-all ${isTimerRunning?'bg-amber-500 text-amber-950':'bg-white text-slate-950 shadow-lg active:scale-90'}`}>
-                {isTimerRunning ? <Pause className="w-7 h-7" /> : <Play className="w-7 h-7 ml-1" fill="currentColor"/>}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Navegación Inferior (3 Botones) */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 pb-safe shadow-[0_-8px_30px_rgb(0,0,0,0.06)]">
-        <div className="max-w-2xl mx-auto flex justify-between px-6 py-3">
-          <button onClick={() => setActiveTab('entrenamiento')} className={`flex flex-col items-center p-2 rounded-2xl transition-all w-20 ${activeTab==='entrenamiento'?'text-blue-600 bg-blue-50 shadow-inner border border-blue-100':'text-slate-400 hover:text-slate-600'}`}>
-            <Activity className="w-6 h-6 mb-1"/>
-            <span className="text-[9px] font-black uppercase tracking-widest">Rutina</span>
-          </button>
-          <button onClick={() => setActiveTab('progreso')} className={`flex flex-col items-center p-2 rounded-2xl transition-all w-20 ${activeTab==='progreso'?'text-blue-600 bg-blue-50 shadow-inner border border-blue-100':'text-slate-400 hover:text-slate-600'}`}>
-            <CalendarIcon className="w-6 h-6 mb-1"/>
-            <span className="text-[9px] font-black uppercase tracking-widest">Avance</span>
-          </button>
-          <button onClick={() => setActiveTab('nutricion')} className={`flex flex-col items-center p-2 rounded-2xl transition-all w-20 ${activeTab==='nutricion'?'text-blue-600 bg-blue-50 shadow-inner border border-blue-100':'text-slate-400 hover:text-slate-600'}`}>
-            <Apple className="w-6 h-6 mb-1"/>
-            <span className="text-[9px] font-black uppercase tracking-widest">Dieta</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
+          
