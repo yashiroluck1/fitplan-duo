@@ -1,9 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { Activity, Apple, CheckCircle2, AlertTriangle, Timer, Play, Pause, Users, HeartPulse, ChevronDown, Info, Beaker, LogOut, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Brain } from 'lucide-react';
 
+// Hook personalizado para guardar datos en el navegador automáticamente
+function useLocalStorage(key, initialValue) {
+  const [value, setValue] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const stored = window.localStorage.getItem(key);
+      if (stored) return JSON.parse(stored);
+    }
+    return initialValue;
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(key, JSON.stringify(value));
+    }
+  }, [key, value]);
+
+  return [value, setValue];
+}
+
 const YouTubeButton = ({ videoId }) => {
   const openTutorial = () => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && videoId) {
       window.open(`https://www.youtube.com/shorts/${videoId}`, '_blank', 'noopener,noreferrer');
     }
   };
@@ -29,18 +48,20 @@ const motivaciones = [
 ];
 
 export default function App() {
-  const [activeProfile, setActiveProfile] = useState(null);
+  const [activeProfile, setActiveProfile] = useLocalStorage('fp-profile', null);
   const [activeTab, setActiveTab] = useState('entrenamiento');
   const [activeDay, setActiveDay] = useState(0);
   const [activeExerciseIdx, setActiveExerciseIdx] = useState(0);
-  const [useScale, setUseScale] = useState(true);
+  const [useScale, setUseScale] = useLocalStorage('fp-scale', true);
   
-  const [completedSets, setCompletedSets] = useState({}); 
-  const [mealSelections, setMealSelections] = useState({});
-  const [suppStatus, setSuppStatus] = useState('none'); 
-  const [suppType, setSuppType] = useState({ protein: false, creatine: false });
-  const [calendarData, setCalendarData] = useState({});
+  // Estados persistentes
+  const [completedSets, setCompletedSets] = useLocalStorage('fp-sets', {}); 
+  const [mealSelections, setMealSelections] = useLocalStorage('fp-meals', {});
+  const [suppStatus, setSuppStatus] = useLocalStorage('fp-suppStatus', 'none'); 
+  const [suppType, setSuppType] = useLocalStorage('fp-suppType', { protein: false, creatine: false });
+  const [calendarData, setCalendarData] = useLocalStorage('fp-calendar', {});
 
+  // Temporizador y Modal
   const [timeLeft, setTimeLeft] = useState(60);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [timerMode, setTimerMode] = useState('rest'); 
@@ -49,12 +70,12 @@ export default function App() {
   const [showExertionModal, setShowExertionModal] = useState(false);
   const [currentMotivation, setCurrentMotivation] = useState("");
 
+  // Sonido del temporizador (3 pitidos largos)
   const playBeep = () => {
     if (typeof window === 'undefined') return;
     try {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       if (!AudioContext) return;
-      
       const ctx = new AudioContext();
       const playTone = (time, duration) => {
         const osc = ctx.createOscillator();
@@ -77,6 +98,148 @@ export default function App() {
     }
   };
 
+  // --- DATOS ORIGINALES RESTAURADOS ---
+  const rawProfiles = {
+    Andros: {
+      goal: 'Recomposición, cuidado de hernia discal.',
+      warning: 'Mantén la columna neutral. Cero abdominales tipo "crunch".',
+      nutrition: {
+        calories: '~2,000', protein: '160g',
+        meals: [
+          { 
+            time: '12:00 PM', title: 'Romper Ayuno',
+            options: [
+              { name: 'Opción 1: Huevos y Avena', items: [{scale: '200g Huevos', noScale: '4 Huevos enteros'}, {scale: '250g Avena', noScale: '1 Taza de avena'}, {scale: '100g Plátano', noScale: '1 Plátano'}] },
+              { name: 'Opción 2: Atún y Arroz', items: [{scale: '200g Atún', noScale: '2 Latas de atún'}, {scale: '150g Arroz', noScale: '1 Taza de arroz'}, {scale: '150g Manzana', noScale: '1 Manzana'}] }
+            ]
+          },
+          { 
+            time: '4:00 PM', title: 'Comida Principal',
+            options: [
+              { name: 'Opción 1: Pollo y Papa', items: [{scale: '200g Pollo', noScale: '1 Pechuga'}, {scale: '300g Papas', noScale: '2 Papas medianas'}, {scale: '100g Brócoli', noScale: '1 Taza brócoli'}] },
+              { name: 'Opción 2: Lentejas y Huevo', items: [{scale: '400g Lentejas', noScale: '2 Tazas lentejas'}, {scale: '150g Huevo', noScale: '3 Huevos duros'}, {scale: 'Ensalada', noScale: 'Ensalada libre'}] }
+            ]
+          },
+          { 
+            time: '7:30 PM', title: 'Cierre de Ventana',
+            options: [
+              { name: 'Opción 1: Pollo y Cacahuates', items: [{scale: '150g Pollo', noScale: '1 Pechuga mediana'}, {scale: 'Aceite oliva (15ml)', noScale: '1 Cda. aceite oliva'}, {scale: '30g Cacahuates', noScale: '1 Puñado cacahuates'}] },
+              { name: 'Opción 2: Huevos y Frijol', items: [{scale: '120g Claras + 50g Huevo', noScale: '4 Claras + 1 Huevo'}, {scale: '200g Frijoles', noScale: '1 Taza frijoles'}, {scale: 'Vegetales libres', noScale: 'Vegetales libres'}] }
+            ]
+          }
+        ]
+      },
+      workoutPlan: [
+        { day: 'Día 1', title: 'Tren Superior (Empuje)', exercises: [
+          { name: 'Flexiones de pecho', sets: '3', reps: '8-15', note: 'Apoya rodillas si es necesario.', youtubeId: "zUymek3A64A" },
+          { name: 'Pike Push-ups', sets: '3', reps: '8-12', note: 'Foco en hombros.', youtubeId: "br9PF4gkXEA" },
+          { name: 'Fondos para tríceps', sets: '3', reps: '10-15', note: 'Espalda cerca de la silla.', youtubeId: "jDafIn0WMUw" },
+          { name: 'Plancha frontal', sets: '3', reps: '30 seg', note: 'Aprieta glúteos y abdomen.', youtubeId: "aFk1SjShgO4" }
+        ]},
+        { day: 'Día 2', title: 'Tren Inferior', exercises: [
+          { name: 'Sentadillas', sets: '3', reps: '12-15', note: 'Torso erguido.', youtubeId: "ba8tr1NzwXU" },
+          { name: 'Zancadas hacia atrás', sets: '3', reps: '10', note: 'Menos tensión en rodillas.', youtubeId: "ZRpD5MfIYA0" },
+          { name: 'Puente de glúteo', sets: '4', reps: '15', note: 'Seguro para la hernia.', youtubeId: "LkCJxld5Bj4" },
+          { name: 'Elevación de talones', sets: '4', reps: '20', note: 'Sobre puntas.', youtubeId: "ww-6lRXvI9Y" }
+        ]},
+        { day: 'Día 3', title: 'Estabilidad Core (McGill)', exercises: [
+          { name: 'Bird-Dog', sets: '3', reps: '6', note: 'Pausa de 3 seg arriba.', youtubeId: "OdP8gNwsndM" },
+          { name: 'Plancha lateral', sets: '3', reps: '20 seg', note: 'Apoya rodillas si necesitas.', youtubeId: "vyLwEzLWe_g" },
+          { name: 'Curl-up McGill', sets: '3', reps: '8', note: 'Manos bajo zona lumbar.', youtubeId: "fJi6F0VDqLY" }
+        ]},
+        { day: 'Día 4', title: 'Tren Superior (Tracción)', exercises: [
+          { name: 'Back Widows', sets: '4', reps: '10-15', note: 'Codos empujan el suelo.', youtubeId: "jDafIn0WMUw" },
+          { name: 'Remo invertido / Deslizamiento', sets: '3', reps: '10', note: 'Tira con la espalda.', youtubeId: "ba8tr1NzwXU" },
+          { name: 'Superman holds', sets: '3', reps: '15 seg', note: 'Eleva pecho suavemente.', youtubeId: "ww-6lRXvI9Y" }
+        ]},
+        { day: 'Día 5', title: 'Tren Inferior y Core', exercises: [
+          { name: 'Sentadilla Búlgara', sets: '3', reps: '8-12', note: 'Pie trasero en silla.', youtubeId: "ZRpD5MfIYA0" },
+          { name: 'Step-ups', sets: '3', reps: '10', note: 'Sube a silla firme.', youtubeId: "ww-6lRXvI9Y" },
+          { name: 'Wall Sit', sets: '3', reps: '45 seg', note: 'Espalda en pared.', youtubeId: "ba8tr1NzwXU" }
+        ]}
+      ]
+    },
+    Charlotte: {
+      goal: 'Tonificar glúteos/abdomen, pérdida de grasa.',
+      warning: 'Cero flexión profunda de rodilla si hay dolor.',
+      nutrition: {
+        calories: '~1,450', protein: '110g',
+        meals: [
+          { 
+            time: '12:00 PM', title: 'Romper Ayuno',
+            options: [
+              { name: 'Opción 1: Huevos y Tortilla', items: [{scale: '100g Huevo + 60g Claras', noScale: '2 Huevos + 2 Claras'}, {scale: '60g Tortillas', noScale: '2 Tortillas maíz'}, {scale: '100g Manzana', noScale: '1 Manzana chica'}] },
+              { name: 'Opción 2: Avena Proteica', items: [{scale: '40g Avena seca', noScale: '1/2 Taza avena'}, {scale: '100g Atún', noScale: '1 Lata atún'}, {scale: '15g Cacahuates', noScale: '1 Cda. cacahuates'}] }
+            ]
+          },
+          { 
+            time: '4:00 PM', title: 'Comida Principal',
+            options: [
+              { name: 'Opción 1: Pollo y Arroz', items: [{scale: '120g Pollo', noScale: '1 Pechuga chica'}, {scale: '80g Arroz', noScale: '1/2 Taza arroz'}, {scale: 'Vegetales al vapor', noScale: 'Abundante brócoli'}] },
+              { name: 'Opción 2: Frijol y Huevo', items: [{scale: '300g Frijol', noScale: '1.5 Tazas frijol'}, {scale: '100g Huevo', noScale: '2 Huevos duros'}, {scale: 'Zanahorias', noScale: 'Zanahoria libre'}] }
+            ]
+          },
+          { 
+            time: '7:30 PM', title: 'Cierre de Ventana',
+            options: [
+              { name: 'Opción 1: Atún y Ensalada', items: [{scale: '100g Atún', noScale: '1 Lata atún'}, {scale: 'Aceite oliva (7ml)', noScale: '1/2 Cda. aceite oliva'}] },
+              { name: 'Opción 2: Pollo Ligero', items: [{scale: '100g Pechuga', noScale: '1/2 Pechuga'}, {scale: 'Ensalada verde', noScale: 'Ensalada libre'}] }
+            ]
+          }
+        ]
+      },
+      workoutPlan: [
+        { day: 'Día 1', title: 'Glúteos y Core', exercises: [
+          { name: 'Puente de glúteo', sets: '4', reps: '15-20', note: 'Aprieta 2 seg arriba.', youtubeId: "LkCJxld5Bj4" },
+          { name: 'Frog Pumps', sets: '3', reps: '20', note: 'Suelas juntas.', youtubeId: "rgljhH1X4vc" },
+          { name: 'Elevación lateral', sets: '3', reps: '15', note: 'Acostada de lado.', youtubeId: "ww-6lRXvI9Y" },
+          { name: 'Plancha (Plank)', sets: '3', reps: '30 seg', note: 'Abdomen apretado.', youtubeId: "m8lSq4SC_eM" }
+        ]},
+        { day: 'Día 2', title: 'Tren Superior', exercises: [
+          { name: 'Flexiones rodillas', sets: '3', reps: '10-15', note: 'Cojín bajo rodillas.', youtubeId: "zUymek3A64A" },
+          { name: 'Back Widows', sets: '3', reps: '12', note: 'Empuja con codos.', youtubeId: "jDafIn0WMUw" },
+          { name: 'Fondos tríceps', sets: '3', reps: '12', note: 'Espalda cerca silla.', youtubeId: "jDafIn0WMUw" }
+        ]},
+        { day: 'Día 3', title: 'Glúteo Aislado', exercises: [
+          { name: 'Puente una pierna', sets: '3', reps: '12', note: 'Empuja con talón.', youtubeId: "LkCJxld5Bj4" },
+          { name: 'Clamshells', sets: '3', reps: '15', note: 'De lado.', youtubeId: "rgljhH1X4vc" },
+          { name: 'Toques de talón', sets: '3', reps: '20', note: 'Boca arriba.', youtubeId: "m8lSq4SC_eM" }
+        ]},
+        { day: 'Día 4', title: 'Core y Brazos', exercises: [
+          { name: 'Flutter Kicks', sets: '3', reps: '30 seg', note: 'Manos bajo glúteos.', youtubeId: "ybdeVE83b4E" },
+          { name: 'Plancha lateral', sets: '3', reps: '20 seg', note: 'Oblicuos.', youtubeId: "vyLwEzLWe_g" },
+          { name: 'Superman holds', sets: '3', reps: '15 seg', note: 'Zona lumbar suave.', youtubeId: "ww-6lRXvI9Y" }
+        ]},
+        { day: 'Día 5', title: 'Cadera', exercises: [
+          { name: 'Peso Muerto Rumano', sets: '3', reps: '15', note: 'Rodillas casi estiradas.', youtubeId: "mYWE12heiDA" },
+          { name: 'Puente Isométrico', sets: '3', reps: '45 seg', note: 'Mantén cadera arriba.', youtubeId: "LkCJxld5Bj4" },
+          { name: 'Elevación piernas', sets: '3', reps: '15', note: 'Piernas rectas.', youtubeId: "HrxOWhPdsOY" }
+        ]}
+      ]
+    }
+  };
+
+  const profiles = JSON.parse(JSON.stringify(rawProfiles));
+  if (suppType.protein) {
+    Object.keys(profiles).forEach(p => {
+      profiles[p].nutrition.meals[1].options.push({
+        name: 'Opción 3 (Rápida): Batido',
+        items: [{scale: '30g Proteína (1 scoop)', noScale: '1 Scoop'}, {scale: '100g Plátano', noScale: '1 Plátano'}, {scale: '15g Maní', noScale: '1 Cda. maní'}]
+      });
+    });
+  }
+
+  // --- LÓGICA AUTO-DÍA ---
+  useEffect(() => {
+    if (activeProfile) {
+      const completedDays = Object.keys(calendarData).filter(k => k.endsWith(`-${activeProfile}`) && calendarData[k]).length;
+      const totalPlanDays = profiles[activeProfile].workoutPlan.length;
+      setActiveDay(completedDays % totalPlanDays);
+      setActiveExerciseIdx(0);
+    }
+  }, [activeProfile, calendarData]);
+
+  // Manejo del Temporizador
   useEffect(() => {
     let interval = null;
     if (isTimerRunning && timeLeft > 0) {
@@ -93,10 +256,6 @@ export default function App() {
     }
     return () => clearInterval(interval);
   }, [isTimerRunning, timeLeft, timerMode, activeWorkSet]);
-
-  useEffect(() => {
-    setActiveExerciseIdx(0);
-  }, [activeDay]);
 
   const toggleTimer = () => setIsTimerRunning(!isTimerRunning);
   
@@ -133,7 +292,7 @@ export default function App() {
     setShowExertionModal(false);
     resetTimer(restTime, 'rest');
     
-    const currentPlan = profiles[activeProfile].workoutPlan[activeDay] || profiles[activeProfile].workoutPlan[0];
+    const currentPlan = profiles[activeProfile].workoutPlan[activeDay];
     if (activeExerciseIdx < currentPlan.exercises.length - 1) {
       setActiveExerciseIdx(prev => prev + 1);
     } else {
@@ -179,100 +338,6 @@ export default function App() {
     setMealSelections(prev => ({ ...prev, [`${activeProfile}-${mealIndex}`]: parseInt(optionIndex) }));
   };
   const getSelectedMealOption = (mealIndex) => mealSelections[`${activeProfile}-${mealIndex}`] || 0;
-
-  const rawProfiles = {
-    Andros: {
-      goal: 'Recomposición, cuidado de hernia discal.',
-      warning: 'Mantén la columna neutral. Cero abdominales tipo "crunch".',
-      nutrition: {
-        calories: '~2,000', protein: '160g',
-        meals: [
-          { time: '12:00 PM', title: 'Romper Ayuno', options: [{ name: 'Opción 1: Huevos y Avena', items: [{scale: '200g Huevos', noScale: '4 Huevos'}, {scale: '250g Avena', noScale: '1 Taza'}] }, { name: 'Opción 2: Atún y Arroz', items: [{scale: '200g Atún', noScale: '2 Latas'}, {scale: '150g Arroz', noScale: '1 Taza'}] }] },
-          { time: '4:00 PM', title: 'Comida Principal', options: [{ name: 'Opción 1: Pollo y Papa', items: [{scale: '200g Pollo', noScale: '1 Pechuga'}, {scale: '300g Papas', noScale: '2 Papas'}] }, { name: 'Opción 2: Lentejas y Huevo', items: [{scale: '400g Lentejas', noScale: '2 Tazas'}, {scale: '150g Huevo', noScale: '3 Huevos'}] }] },
-          { time: '7:30 PM', title: 'Cierre de Ventana', options: [{ name: 'Opción 1: Pollo y Maní', items: [{scale: '150g Pollo', noScale: '1 Pechuga'}, {scale: '30g Maní', noScale: '1 Puñado'}] }] }
-        ]
-      },
-      workoutPlan: [
-        { day: 'Día 1', title: 'Tren Superior (Empuje)', exercises: [
-          { name: 'Flexiones de pecho', sets: '3', reps: '8-15', note: 'Apoya rodillas si es necesario.', youtubeId: "zUymek3A64A" },
-          { name: 'Pike Push-ups', sets: '3', reps: '8-12', note: 'Foco en hombros.', youtubeId: "br9PF4gkXEA" },
-          { name: 'Fondos para tríceps', sets: '3', reps: '10-15', note: 'Espalda cerca de la silla.', youtubeId: "jDafIn0WMUw" },
-          { name: 'Plancha frontal', sets: '3', reps: '30 seg', note: 'Aprieta glúteos y abdomen.', youtubeId: "aFk1SjShgO4" }
-        ]},
-        { day: 'Día 2', title: 'Tren Inferior', exercises: [
-          { name: 'Sentadillas', sets: '3', reps: '12-15', note: 'Torso erguido.', youtubeId: "ba8tr1NzwXU" },
-          { name: 'Zancadas hacia atrás', sets: '3', reps: '10', note: 'Menos tensión en rodillas.', youtubeId: "ZRpD5MfIYA0" },
-          { name: 'Puente de glúteo', sets: '4', reps: '15', note: 'Seguro para la hernia.', youtubeId: "LkCJxld5Bj4" },
-          { name: 'Elevación de talones', sets: '4', reps: '20', note: 'Sobre puntas.', youtubeId: "ww-6lRXvI9Y" }
-        ]},
-        { day: 'Día 3', title: 'Estabilidad Core (McGill)', exercises: [
-          { name: 'Bird-Dog', sets: '3', reps: '6', note: 'Pausa de 3 seg arriba.', youtubeId: "OdP8gNwsndM" },
-          { name: 'Plancha lateral', sets: '3', reps: '20 seg', note: 'Apoya rodillas si necesitas.', youtubeId: "vyLwEzLWe_g" },
-          { name: 'Curl-up McGill', sets: '3', reps: '8', note: 'Manos bajo zona lumbar.', youtubeId: "fJi6F0VDqLY" }
-        ]},
-        { day: 'Día 4', title: 'Tren Superior (Tracción)', exercises: [
-          { name: 'Back Widows', sets: '4', reps: '10-15', note: 'Codos empujan el suelo.', youtubeId: "jDafIn0WMUw" },
-          { name: 'Deslizamientos suelo', sets: '3', reps: '10', note: 'Tira con la espalda.', youtubeId: "ba8tr1NzwXU" },
-          { name: 'Superman holds', sets: '3', reps: '15 seg', note: 'Eleva pecho suavemente.', youtubeId: "ww-6lRXvI9Y" }
-        ]},
-        { day: 'Día 5', title: 'Tren Inferior y Core', exercises: [
-          { name: 'Sentadilla Búlgara', sets: '3', reps: '8-12', note: 'Pie trasero en silla.', youtubeId: "ZRpD5MfIYA0" },
-          { name: 'Step-ups', sets: '3', reps: '10', note: 'Sube a silla firme.', youtubeId: "ww-6lRXvI9Y" },
-          { name: 'Wall Sit', sets: '3', reps: '45 seg', note: 'Espalda en pared.', youtubeId: "ba8tr1NzwXU" }
-        ]}
-      ]
-    },
-    Charlotte: {
-      goal: 'Tonificar glúteos/abdomen, pérdida de grasa.',
-      warning: 'Cero flexión profunda de rodilla si hay dolor.',
-      nutrition: {
-        calories: '~1,450', protein: '110g',
-        meals: [
-          { time: '12:00 PM', title: 'Romper Ayuno', options: [{ name: 'Opción 1: Huevos y Tortilla', items: [{scale: '100g Huevos', noScale: '2 Huevos'}, {scale: '60g Tortillas', noScale: '2 Tortillas'}] }, { name: 'Opción 2: Avena Proteica', items: [{scale: '40g Avena seca', noScale: '1/2 Taza avena'}, {scale: '1 Lata Atún', noScale: '1 Lata atún'}] }] },
-          { time: '4:00 PM', title: 'Comida Principal', options: [{ name: 'Opción 1: Pollo y Arroz', items: [{scale: '120g Pollo', noScale: '1 Pechuga chica'}, {scale: '80g Arroz', noScale: '1/2 Taza arroz'}] }, { name: 'Opción 2: Frijol y Huevo', items: [{scale: '300g Frijol', noScale: '1.5 Tazas frijol'}, {scale: '100g Huevo', noScale: '2 Huevos duros'}] }] },
-          { time: '7:30 PM', title: 'Cierre de Ventana', options: [{ name: 'Opción 1: Atún y Ensalada', items: [{scale: '100g Atún', noScale: '1 Lata atún'}, {scale: 'Ensalada', noScale: 'Libre'}] }] }
-        ]
-      },
-      workoutPlan: [
-        { day: 'Día 1', title: 'Glúteos y Core', exercises: [
-          { name: 'Puente de glúteo', sets: '4', reps: '15-20', note: 'Aprieta 2 seg arriba.', youtubeId: "LkCJxld5Bj4" },
-          { name: 'Frog Pumps', sets: '3', reps: '20', note: 'Suelas juntas.', youtubeId: "rgljhH1X4vc" },
-          { name: 'Elevación lateral', sets: '3', reps: '15', note: 'Acostada de lado.', youtubeId: "ww-6lRXvI9Y" },
-          { name: 'Plancha (Plank)', sets: '3', reps: '30 seg', note: 'Abdomen apretado.', youtubeId: "m8lSq4SC_eM" }
-        ]},
-        { day: 'Día 2', title: 'Tren Superior', exercises: [
-          { name: 'Flexiones rodillas', sets: '3', reps: '10-15', note: 'Cojín bajo rodillas.', youtubeId: "ba8tr1NzwXU" },
-          { name: 'Back Widows', sets: '3', reps: '12', note: 'Empuja con codos.', youtubeId: "ba8tr1NzwXU" },
-          { name: 'Fondos tríceps', sets: '3', reps: '12', note: 'Espalda cerca silla.', youtubeId: "jDafIn0WMUw" }
-        ]},
-        { day: 'Día 3', title: 'Glúteo Aislado', exercises: [
-          { name: 'Puente una pierna', sets: '3', reps: '12', note: 'Empuja con talón.', youtubeId: "LkCJxld5Bj4" },
-          { name: 'Clamshells', sets: '3', reps: '15', note: 'De lado.', youtubeId: "rgljhH1X4vc" },
-          { name: 'Toques de talón', sets: '3', reps: '20', note: 'Boca arriba.', youtubeId: "m8lSq4SC_eM" }
-        ]},
-        { day: 'Día 4', title: 'Core y Brazos', exercises: [
-          { name: 'Flutter Kicks', sets: '3', reps: '30 seg', note: 'Manos bajo glúteos.', youtubeId: "ybdeVE83b4E" },
-          { name: 'Plancha lateral', sets: '3', reps: '20 seg', note: 'Oblicuos.', youtubeId: "vyLwEzLWe_g" },
-          { name: 'Superman holds', sets: '3', reps: '15 seg', note: 'Zona lumbar suave.', youtubeId: "ww-6lRXvI9Y" }
-        ]},
-        { day: 'Día 5', title: 'Cadera', exercises: [
-          { name: 'Peso Muerto Rumano', sets: '3', reps: '15', note: 'Rodillas casi estiradas.', youtubeId: "mYWE12heiDA" },
-          { name: 'Puente Isométrico', sets: '3', reps: '45 seg', note: 'Mantén cadera arriba.', youtubeId: "LkCJxld5Bj4" },
-          { name: 'Elevación piernas', sets: '3', reps: '15', note: 'Piernas rectas.', youtubeId: "HrxOWhPdsOY" }
-        ]}
-      ]
-    }
-  };
-
-  const profiles = JSON.parse(JSON.stringify(rawProfiles));
-  if (suppType.protein) {
-    Object.keys(profiles).forEach(p => {
-      profiles[p].nutrition.meals[1].options.push({
-        name: 'Opción 3 (Rápida): Batido',
-        items: [{scale: '30g Proteína (1 scoop)', noScale: '1 Scoop'}, {scale: '100g Plátano', noScale: '1 Plátano'}, {scale: '15g Maní', noScale: '1 Cda. maní'}]
-      });
-    });
-  }
 
   if (!activeProfile) {
     return (
@@ -372,9 +437,12 @@ export default function App() {
               <p><strong>Aviso Técnico:</strong> {currentProfile.warning}</p>
             </div>
 
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide px-1">
               {currentProfile.workoutPlan.map((d, i) => (
-                <button key={i} onClick={() => setActiveDay(i)} className={`px-5 py-2 rounded-full text-sm font-bold transition-all shrink-0 ${activeDay===i?'bg-blue-600 text-white shadow-lg shadow-blue-200':'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}>
+                <button 
+                  key={i} 
+                  onClick={() => { setActiveDay(i); setActiveExerciseIdx(0); }} 
+                  className={`px-5 py-2 rounded-full text-sm font-bold transition-all shrink-0 border ${activeDay===i ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/40' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}>
                   {d.day}
                 </button>
               ))}
@@ -577,7 +645,7 @@ export default function App() {
               </div>
               <div className="p-5">
                 <p className="text-xs text-slate-500 font-bold mb-4 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                  Toca un día para marcarlo manualmente. Los días se marcan automáticamente al terminar una rutina.
+                  Toca un día para marcarlo manualmente. Los días se marcan automáticamente al terminar una rutina completa.
                 </p>
                 <div className="grid grid-cols-7 gap-2">
                   {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((day, i) => (
