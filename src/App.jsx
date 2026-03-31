@@ -29,11 +29,11 @@ const YouTubeButton = ({ videoId }) => {
   
   if (!videoId) return null;
   return (
-    <button onClick={openTutorial} className="w-full h-14 bg-red-600 hover:bg-red-700 text-white rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-95 shadow-sm mb-4">
-      <Play className="w-6 h-6 fill-current" />
+    <button onClick={openTutorial} className="w-full h-12 bg-red-600 hover:bg-red-700 text-white rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-sm mb-4">
+      <Play className="w-5 h-5 fill-current" />
       <div className="flex flex-col items-start text-left">
-        <span className="font-black text-sm leading-none">Ver Técnica</span>
-        <span className="text-[10px] opacity-80 uppercase tracking-wider">YouTube Short</span>
+        <span className="font-black text-xs leading-none">Ver Técnica</span>
+        <span className="text-[9px] opacity-80 uppercase tracking-wider">YouTube Short</span>
       </div>
     </button>
   );
@@ -54,14 +54,12 @@ export default function App() {
   const [activeExerciseIdx, setActiveExerciseIdx] = useState(0);
   const [useScale, setUseScale] = useLocalStorage('fp-scale', true);
   
-  // Estados persistentes
   const [completedSets, setCompletedSets] = useLocalStorage('fp-sets', {}); 
   const [mealSelections, setMealSelections] = useLocalStorage('fp-meals', {});
   const [suppStatus, setSuppStatus] = useLocalStorage('fp-suppStatus', 'none'); 
   const [suppType, setSuppType] = useLocalStorage('fp-suppType', { protein: false, creatine: false });
   const [calendarData, setCalendarData] = useLocalStorage('fp-calendar', {});
 
-  // Temporizador y Modal
   const [timeLeft, setTimeLeft] = useState(60);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [timerMode, setTimerMode] = useState('rest'); 
@@ -70,7 +68,6 @@ export default function App() {
   const [showExertionModal, setShowExertionModal] = useState(false);
   const [currentMotivation, setCurrentMotivation] = useState("");
 
-  // Sonido del temporizador (3 pitidos largos)
   const playBeep = () => {
     if (typeof window === 'undefined') return;
     try {
@@ -98,7 +95,6 @@ export default function App() {
     }
   };
 
-  // --- DATOS ORIGINALES RESTAURADOS ---
   const rawProfiles = {
     Andros: {
       goal: 'Recomposición, cuidado de hernia discal.',
@@ -229,7 +225,6 @@ export default function App() {
     });
   }
 
-  // --- LÓGICA AUTO-DÍA ---
   useEffect(() => {
     if (activeProfile) {
       const completedDays = Object.keys(calendarData).filter(k => k.endsWith(`-${activeProfile}`) && calendarData[k]).length;
@@ -239,7 +234,6 @@ export default function App() {
     }
   }, [activeProfile, calendarData]);
 
-  // Manejo del Temporizador
   useEffect(() => {
     let interval = null;
     if (isTimerRunning && timeLeft > 0) {
@@ -383,7 +377,7 @@ export default function App() {
   const numSets = parseInt(currentExercise.sets);
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans pb-44">
+    <div className={`min-h-screen bg-slate-50 font-sans ${activeTab === 'entrenamiento' ? 'pb-44' : 'pb-24'}`}>
       
       {showExertionModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
@@ -394,20 +388,20 @@ export default function App() {
             </div>
             
             <h3 className="text-xl font-black text-slate-800 text-center uppercase tracking-tight mb-2">Evaluación de Fatiga</h3>
-            <p className="text-center text-sm font-bold text-slate-500 mb-6">Ajustando temporizador para el siguiente ejercicio</p>
+            <p className="text-center text-sm font-bold text-slate-500 mb-6">Ajustando temporizador</p>
             
             <div className="space-y-3">
               <button onClick={() => handleExertionResponse(120)} className="w-full bg-red-50 hover:bg-red-100 text-red-700 p-4 rounded-2xl font-black border-2 border-red-200 transition-all active:scale-95 flex justify-between items-center">
                 <span>ALTO (Muy cansado)</span>
-                <span className="bg-red-200 px-3 py-1 rounded-full text-xs">120s Rest</span>
+                <span className="bg-red-200 px-3 py-1 rounded-full text-xs">120s</span>
               </button>
               <button onClick={() => handleExertionResponse(90)} className="w-full bg-amber-50 hover:bg-amber-100 text-amber-700 p-4 rounded-2xl font-black border-2 border-amber-200 transition-all active:scale-95 flex justify-between items-center">
                 <span>MEDIO (Puedo seguir)</span>
-                <span className="bg-amber-200 px-3 py-1 rounded-full text-xs">90s Rest</span>
+                <span className="bg-amber-200 px-3 py-1 rounded-full text-xs">90s</span>
               </button>
               <button onClick={() => handleExertionResponse(60)} className="w-full bg-green-50 hover:bg-green-100 text-green-700 p-4 rounded-2xl font-black border-2 border-green-200 transition-all active:scale-95 flex justify-between items-center">
                 <span>BAJO (Imparable)</span>
-                <span className="bg-green-200 px-3 py-1 rounded-full text-xs">60s Rest</span>
+                <span className="bg-green-200 px-3 py-1 rounded-full text-xs">60s</span>
               </button>
             </div>
           </div>
@@ -526,7 +520,7 @@ export default function App() {
         )}
 
         {activeTab === 'nutricion' && (
-          <div className="space-y-4 animate-in fade-in duration-300 pb-20">
+          <div className="space-y-4 animate-in fade-in duration-300">
              <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
                 <h2 className="font-bold text-lg mb-4 flex items-center gap-2 text-slate-800">
                   <Beaker className="w-5 h-5 text-indigo-500"/> Suplementación
@@ -635,7 +629,7 @@ export default function App() {
         )}
 
         {activeTab === 'progreso' && (
-          <div className="space-y-4 animate-in fade-in duration-300 pb-20">
+          <div className="space-y-4 animate-in fade-in duration-300">
             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
               <div className="p-6 bg-slate-50 border-b border-slate-200">
                 <h2 className="font-black text-xl text-slate-800 uppercase tracking-tighter flex items-center gap-2">
@@ -678,29 +672,33 @@ export default function App() {
         )}
       </div>
 
+      {/* TEMPORIZADOR ELEGANTE TIPO PÍLDORA CON MÁS TRANSPARENCIA */}
       {activeTab === 'entrenamiento' && (
-        <div className="fixed bottom-[96px] left-0 right-0 p-4 pointer-events-none z-30">
-          <div className={`max-w-md mx-auto rounded-3xl shadow-2xl p-5 flex items-center justify-between pointer-events-auto border-2 transition-all ${timerMode==='work'?'bg-red-600 border-red-400 shadow-red-500/30':'bg-slate-900 border-slate-800'} text-white`}>
-            <div className="flex items-center gap-4">
-              <div className={`p-4 rounded-2xl ${timerMode==='work'?'bg-red-500':'bg-slate-800'}`}>
-                <Timer className={`w-7 h-7 ${isTimerRunning?'animate-pulse':''}`}/>
+        <div className="fixed bottom-[80px] left-0 right-0 p-3 pointer-events-none z-30">
+          <div className={`max-w-[350px] mx-auto rounded-full shadow-2xl p-2 pl-3 flex items-center justify-between pointer-events-auto border transition-all backdrop-blur-md ${timerMode==='work'?'bg-red-600/80 border-red-500/50 shadow-red-500/40':'bg-slate-900/80 border-slate-700/50'} text-white`}>
+            
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-full ${timerMode==='work'?'bg-red-500':'bg-slate-800'}`}>
+                <Timer className={`w-5 h-5 ${isTimerRunning?'animate-pulse':''}`}/>
               </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black uppercase tracking-widest opacity-60 leading-none mb-1">{timerMode==='work'?'🔥 Esfuerzo':'☕ Descanso'}</span>
-                <span className="text-3xl font-mono font-black tabular-nums">{formatTime(timeLeft)}</span>
+              <div className="flex flex-col justify-center">
+                <span className="text-[9px] font-black uppercase tracking-widest opacity-80 leading-none mb-1">{timerMode==='work'?'🔥 Esfuerzo':'☕ Descanso'}</span>
+                <span className="text-2xl font-mono font-black tabular-nums leading-none">{formatTime(timeLeft)}</span>
               </div>
             </div>
-            <div className="flex gap-2">
+            
+            <div className="flex gap-2 items-center pr-1">
               {timerMode === 'rest' && (
                 <>
-                  <button onClick={() => resetTimer(60)} className="h-12 px-4 bg-slate-800 hover:bg-slate-700 rounded-2xl font-black text-xs border border-slate-700 transition-colors uppercase tracking-widest active:scale-95">60s</button>
-                  <button onClick={() => resetTimer(90)} className="h-12 px-4 bg-slate-800 hover:bg-slate-700 rounded-2xl font-black text-xs border border-slate-700 transition-colors uppercase tracking-widest active:scale-95">90s</button>
+                  <button onClick={() => resetTimer(60)} className="h-9 px-3.5 bg-slate-800 hover:bg-slate-700 rounded-full font-black text-[10px] border border-slate-700 transition-colors uppercase tracking-widest active:scale-95">60s</button>
+                  <button onClick={() => resetTimer(90)} className="h-9 px-3.5 bg-slate-800 hover:bg-slate-700 rounded-full font-black text-[10px] border border-slate-700 transition-colors uppercase tracking-widest active:scale-95">90s</button>
                 </>
               )}
-              <button onClick={toggleTimer} className={`w-14 h-12 flex items-center justify-center rounded-2xl transition-all ${isTimerRunning?'bg-amber-500 text-amber-950':'bg-white text-slate-950 shadow-lg active:scale-90'}`}>
-                {isTimerRunning ? <Pause className="w-7 h-7" /> : <Play className="w-7 h-7 ml-1" fill="currentColor"/>}
+              <button onClick={toggleTimer} className={`w-10 h-10 flex items-center justify-center rounded-full transition-all ${isTimerRunning?'bg-amber-500 text-amber-950':'bg-white text-slate-900 shadow-lg active:scale-90'}`}>
+                {isTimerRunning ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" fill="currentColor"/>}
               </button>
             </div>
+            
           </div>
         </div>
       )}
