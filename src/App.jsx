@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, Apple, CheckCircle2, AlertTriangle, Timer, Play, Pause, Users, HeartPulse, ChevronDown, Info, Beaker, LogOut, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Brain } from 'lucide-react';
+import { Activity, Apple, CheckCircle2, AlertTriangle, Timer, Play, Pause, Users, HeartPulse, ChevronDown, Info, Beaker, LogOut, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Brain, Trophy, Star } from 'lucide-react';
 
-// Hook personalizado para guardar datos en el navegador automáticamente
 function useLocalStorage(key, initialValue) {
   const [value, setValue] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -66,6 +65,7 @@ export default function App() {
   const [activeWorkSet, setActiveWorkSet] = useState(null);
   
   const [showExertionModal, setShowExertionModal] = useState(false);
+  const [showCongratsModal, setShowCongratsModal] = useState(false);
   const [currentMotivation, setCurrentMotivation] = useState("");
 
   const playBeep = () => {
@@ -102,27 +102,9 @@ export default function App() {
       nutrition: {
         calories: '~2,000', protein: '160g',
         meals: [
-          { 
-            time: '12:00 PM', title: 'Romper Ayuno',
-            options: [
-              { name: 'Opción 1: Huevos y Avena', items: [{scale: '200g Huevos', noScale: '4 Huevos enteros'}, {scale: '250g Avena', noScale: '1 Taza de avena'}, {scale: '100g Plátano', noScale: '1 Plátano'}] },
-              { name: 'Opción 2: Atún y Arroz', items: [{scale: '200g Atún', noScale: '2 Latas de atún'}, {scale: '150g Arroz', noScale: '1 Taza de arroz'}, {scale: '150g Manzana', noScale: '1 Manzana'}] }
-            ]
-          },
-          { 
-            time: '4:00 PM', title: 'Comida Principal',
-            options: [
-              { name: 'Opción 1: Pollo y Papa', items: [{scale: '200g Pollo', noScale: '1 Pechuga'}, {scale: '300g Papas', noScale: '2 Papas medianas'}, {scale: '100g Brócoli', noScale: '1 Taza brócoli'}] },
-              { name: 'Opción 2: Lentejas y Huevo', items: [{scale: '400g Lentejas', noScale: '2 Tazas lentejas'}, {scale: '150g Huevo', noScale: '3 Huevos duros'}, {scale: 'Ensalada', noScale: 'Ensalada libre'}] }
-            ]
-          },
-          { 
-            time: '7:30 PM', title: 'Cierre de Ventana',
-            options: [
-              { name: 'Opción 1: Pollo y Cacahuates', items: [{scale: '150g Pollo', noScale: '1 Pechuga mediana'}, {scale: 'Aceite oliva (15ml)', noScale: '1 Cda. aceite oliva'}, {scale: '30g Cacahuates', noScale: '1 Puñado cacahuates'}] },
-              { name: 'Opción 2: Huevos y Frijol', items: [{scale: '120g Claras + 50g Huevo', noScale: '4 Claras + 1 Huevo'}, {scale: '200g Frijoles', noScale: '1 Taza frijoles'}, {scale: 'Vegetales libres', noScale: 'Vegetales libres'}] }
-            ]
-          }
+          { time: '12:00 PM', title: 'Romper Ayuno', options: [{ name: 'Opción 1: Huevos y Avena', items: [{scale: '200g Huevos', noScale: '4 Huevos enteros'}, {scale: '250g Avena', noScale: '1 Taza de avena'}, {scale: '100g Plátano', noScale: '1 Plátano'}] }, { name: 'Opción 2: Atún y Arroz', items: [{scale: '200g Atún', noScale: '2 Latas de atún'}, {scale: '150g Arroz', noScale: '1 Taza de arroz'}, {scale: '150g Manzana', noScale: '1 Manzana'}] }] },
+          { time: '4:00 PM', title: 'Comida Principal', options: [{ name: 'Opción 1: Pollo y Papa', items: [{scale: '200g Pollo', noScale: '1 Pechuga'}, {scale: '300g Papas', noScale: '2 Papas medianas'}, {scale: '100g Brócoli', noScale: '1 Taza brócoli'}] }, { name: 'Opción 2: Lentejas y Huevo', items: [{scale: '400g Lentejas', noScale: '2 Tazas lentejas'}, {scale: '150g Huevo', noScale: '3 Huevos duros'}, {scale: 'Ensalada', noScale: 'Ensalada libre'}] }] },
+          { time: '7:30 PM', title: 'Cierre de Ventana', options: [{ name: 'Opción 1: Pollo y Cacahuates', items: [{scale: '150g Pollo', noScale: '1 Pechuga mediana'}, {scale: 'Aceite oliva (15ml)', noScale: '1 Cda. aceite oliva'}, {scale: '30g Cacahuates', noScale: '1 Puñado cacahuates'}] }, { name: 'Opción 2: Huevos y Frijol', items: [{scale: '120g Claras + 50g Huevo', noScale: '4 Claras + 1 Huevo'}, {scale: '200g Frijoles', noScale: '1 Taza frijoles'}, {scale: 'Vegetales libres', noScale: 'Vegetales libres'}] }] }
         ]
       },
       workoutPlan: [
@@ -161,27 +143,9 @@ export default function App() {
       nutrition: {
         calories: '~1,450', protein: '110g',
         meals: [
-          { 
-            time: '12:00 PM', title: 'Romper Ayuno',
-            options: [
-              { name: 'Opción 1: Huevos y Tortilla', items: [{scale: '100g Huevo + 60g Claras', noScale: '2 Huevos + 2 Claras'}, {scale: '60g Tortillas', noScale: '2 Tortillas maíz'}, {scale: '100g Manzana', noScale: '1 Manzana chica'}] },
-              { name: 'Opción 2: Avena Proteica', items: [{scale: '40g Avena seca', noScale: '1/2 Taza avena'}, {scale: '100g Atún', noScale: '1 Lata atún'}, {scale: '15g Cacahuates', noScale: '1 Cda. cacahuates'}] }
-            ]
-          },
-          { 
-            time: '4:00 PM', title: 'Comida Principal',
-            options: [
-              { name: 'Opción 1: Pollo y Arroz', items: [{scale: '120g Pollo', noScale: '1 Pechuga chica'}, {scale: '80g Arroz', noScale: '1/2 Taza arroz'}, {scale: 'Vegetales al vapor', noScale: 'Abundante brócoli'}] },
-              { name: 'Opción 2: Frijol y Huevo', items: [{scale: '300g Frijol', noScale: '1.5 Tazas frijol'}, {scale: '100g Huevo', noScale: '2 Huevos duros'}, {scale: 'Zanahorias', noScale: 'Zanahoria libre'}] }
-            ]
-          },
-          { 
-            time: '7:30 PM', title: 'Cierre de Ventana',
-            options: [
-              { name: 'Opción 1: Atún y Ensalada', items: [{scale: '100g Atún', noScale: '1 Lata atún'}, {scale: 'Aceite oliva (7ml)', noScale: '1/2 Cda. aceite oliva'}] },
-              { name: 'Opción 2: Pollo Ligero', items: [{scale: '100g Pechuga', noScale: '1/2 Pechuga'}, {scale: 'Ensalada verde', noScale: 'Ensalada libre'}] }
-            ]
-          }
+          { time: '12:00 PM', title: 'Romper Ayuno', options: [{ name: 'Opción 1: Huevos y Tortilla', items: [{scale: '100g Huevo + 60g Claras', noScale: '2 Huevos + 2 Claras'}, {scale: '60g Tortillas', noScale: '2 Tortillas maíz'}, {scale: '100g Manzana', noScale: '1 Manzana chica'}] }, { name: 'Opción 2: Avena Proteica', items: [{scale: '40g Avena seca', noScale: '1/2 Taza avena'}, {scale: '100g Atún', noScale: '1 Lata atún'}, {scale: '15g Cacahuates', noScale: '1 Cda. cacahuates'}] }] },
+          { time: '4:00 PM', title: 'Comida Principal', options: [{ name: 'Opción 1: Pollo y Arroz', items: [{scale: '120g Pollo', noScale: '1 Pechuga chica'}, {scale: '80g Arroz', noScale: '1/2 Taza arroz'}, {scale: 'Vegetales al vapor', noScale: 'Abundante brócoli'}] }, { name: 'Opción 2: Frijol y Huevo', items: [{scale: '300g Frijol', noScale: '1.5 Tazas frijol'}, {scale: '100g Huevo', noScale: '2 Huevos duros'}, {scale: 'Zanahorias', noScale: 'Zanahoria libre'}] }] },
+          { time: '7:30 PM', title: 'Cierre de Ventana', options: [{ name: 'Opción 1: Atún y Ensalada', items: [{scale: '100g Atún', noScale: '1 Lata atún'}, {scale: 'Aceite oliva (7ml)', noScale: '1/2 Cda. aceite oliva'}] }, { name: 'Opción 2: Pollo Ligero', items: [{scale: '100g Pechuga', noScale: '1/2 Pechuga'}, {scale: 'Ensalada verde', noScale: 'Ensalada libre'}] }] }
         ]
       },
       workoutPlan: [
@@ -210,6 +174,87 @@ export default function App() {
           { name: 'Peso Muerto Rumano', sets: '3', reps: '15', note: 'Rodillas casi estiradas.', youtubeId: "mYWE12heiDA" },
           { name: 'Puente Isométrico', sets: '3', reps: '45 seg', note: 'Mantén cadera arriba.', youtubeId: "LkCJxld5Bj4" },
           { name: 'Elevación piernas', sets: '3', reps: '15', note: 'Piernas rectas.', youtubeId: "HrxOWhPdsOY" }
+        ]}
+      ]
+    },
+    Eliot: {
+      goal: 'Bajar peso y construir músculo.',
+      warning: 'Hidrátate y consume potasio (plátano/espinaca) para evitar calambres en los pies.',
+      nutrition: {
+        calories: '~1,900', protein: '140g',
+        meals: [
+          { time: '12:00 PM', title: 'Romper Ayuno', options: [{ name: 'Opción 1: Huevos y Plátano (Potasio)', items: [{scale: '200g Huevos', noScale: '4 Huevos enteros'}, {scale: '150g Plátano', noScale: '1.5 Plátanos'}, {scale: '30g Avena', noScale: '1/3 Taza avena'}] }, { name: 'Opción 2: Batido y Tostadas', items: [{scale: '1 Scoop Proteína', noScale: '1 Scoop'}, {scale: '2 Panes integrales', noScale: '2 Rebanadas'}, {scale: '15g Crema cacahuate', noScale: '1 Cda. crema'}] }] },
+          { time: '4:00 PM', title: 'Comida Principal', options: [{ name: 'Opción 1: Pollo, Frijol y Arroz', items: [{scale: '180g Pollo', noScale: '1 Pechuga'}, {scale: '150g Frijol (Magnesio)', noScale: '1 Taza frijol'}, {scale: '100g Arroz', noScale: '1/2 Taza arroz'}] }, { name: 'Opción 2: Carne magra y Papa', items: [{scale: '150g Res magra', noScale: '1 Bistec grande'}, {scale: '250g Papa cocida', noScale: '2 Papas chicas'}, {scale: 'Espinacas', noScale: 'Abundante espinaca'}] }] },
+          { time: '7:30 PM', title: 'Cierre de Ventana', options: [{ name: 'Opción 1: Atún y Espinaca', items: [{scale: '150g Atún', noScale: '1.5 Latas atún'}, {scale: 'Ensalada espinaca', noScale: 'Ensalada libre'}, {scale: '15g Almendras', noScale: '1 Puñito almendras'}] }, { name: 'Opción 2: Claras y Aguacate', items: [{scale: '200g Claras', noScale: '6 Claras'}, {scale: '50g Aguacate', noScale: '1/4 Aguacate'}] }] }
+        ]
+      },
+      workoutPlan: [
+        { day: 'Día 1', title: 'Empuje (Pecho/Tríceps)', exercises: [
+          { name: 'Flexiones de pecho', sets: '3', reps: '10-15', note: 'Cuerpo recto, sin arquear.', youtubeId: "zUymek3A64A" },
+          { name: 'Pike Push-ups', sets: '3', reps: '8-12', note: 'Para hombros.', youtubeId: "br9PF4gkXEA" },
+          { name: 'Fondos en silla', sets: '3', reps: '12-15', note: 'Baja controlado.', youtubeId: "jDafIn0WMUw" },
+          { name: 'Plancha frontal', sets: '3', reps: '40 seg', note: 'Aprieta el abdomen.', youtubeId: "aFk1SjShgO4" }
+        ]},
+        { day: 'Día 2', title: 'Piernas (Sin tensión en pies)', exercises: [
+          { name: 'Sentadillas', sets: '3', reps: '15', note: 'Pie completamente plano.', youtubeId: "ba8tr1NzwXU" },
+          { name: 'Zancadas estáticas', sets: '3', reps: '10 x pierna', note: 'Baja recto, suave.', youtubeId: "ZRpD5MfIYA0" },
+          { name: 'Puente de glúteo', sets: '3', reps: '20', note: 'Empuja con los talones.', youtubeId: "LkCJxld5Bj4" },
+          { name: 'Wall Sit (Silla invisible)', sets: '3', reps: '45 seg', note: 'Espalda a la pared.', youtubeId: "ba8tr1NzwXU" }
+        ]},
+        { day: 'Día 3', title: 'Core y Cardio', exercises: [
+          { name: 'Bird-Dog', sets: '3', reps: '10', note: 'Lento y controlado.', youtubeId: "OdP8gNwsndM" },
+          { name: 'Plancha lateral', sets: '3', reps: '30 seg', note: 'Mantén la cadera arriba.', youtubeId: "vyLwEzLWe_g" },
+          { name: 'Jumping Jacks (Suaves)', sets: '3', reps: '45 seg', note: 'Si hay calambre, haz pasos laterales.', youtubeId: "ww-6lRXvI9Y" }
+        ]},
+        { day: 'Día 4', title: 'Tracción (Espalda/Bíceps)', exercises: [
+          { name: 'Back Widows', sets: '4', reps: '15', note: 'Empuja con los codos.', youtubeId: "jDafIn0WMUw" },
+          { name: 'Remo invertido en mesa', sets: '3', reps: '10', note: 'Usa una mesa firme.', youtubeId: "ba8tr1NzwXU" },
+          { name: 'Superman holds', sets: '3', reps: '20 seg', note: 'Tensa la espalda baja.', youtubeId: "ww-6lRXvI9Y" }
+        ]},
+        { day: 'Día 5', title: 'Full Body', exercises: [
+          { name: 'Burpees sin salto', sets: '3', reps: '10', note: 'Evita el impacto en los pies.', youtubeId: "ba8tr1NzwXU" },
+          { name: 'Sentadilla Búlgara', sets: '3', reps: '10 x pierna', note: 'Usa una silla.', youtubeId: "ZRpD5MfIYA0" },
+          { name: 'Flexiones declinadas', sets: '3', reps: '10', note: 'Pies en silla.', youtubeId: "zUymek3A64A" }
+        ]}
+      ]
+    },
+    Alejandra: {
+      goal: 'Bajar peso y hacer músculo.',
+      warning: 'Cuidado con la espalda baja: activa siempre el abdomen y evita cargas pesadas en la columna.',
+      nutrition: {
+        calories: '~1,400', protein: '100g',
+        meals: [
+          { time: '12:00 PM', title: 'Romper Ayuno', options: [{ name: 'Opción 1: Huevos y Avena', items: [{scale: '100g Huevos (2)', noScale: '2 Huevos enteros'}, {scale: '30g Avena', noScale: '1/3 Taza avena'}, {scale: '100g Fruta', noScale: '1 Manzana/Plátano'}] }, { name: 'Opción 2: Tostadas con Huevo', items: [{scale: '2 Rebanadas pan', noScale: '2 Panes integrales'}, {scale: '100g Huevos', noScale: '2 Huevos'}, {scale: 'Verduras', noScale: 'Al gusto'}] }] },
+          { time: '4:00 PM', title: 'Comida Principal', options: [{ name: 'Opción 1: Pollo y Arroz', items: [{scale: '120g Pechuga', noScale: '1 Pechuga chica'}, {scale: '80g Arroz', noScale: '1/2 Taza arroz'}, {scale: 'Verduras verdes', noScale: 'Libre'}] }, { name: 'Opción 2: Atún y Pasta', items: [{scale: '1 Lata Atún', noScale: '1 Lata'}, {scale: '80g Pasta cocida', noScale: '1 Taza pasta'}, {scale: 'Zanahoria/Brócoli', noScale: 'Libre'}] }] },
+          { time: '7:30 PM', title: 'Cierre de Ventana', options: [{ name: 'Opción 1: Ensalada Ligera', items: [{scale: '80g Pollo/Atún', noScale: 'Porción pequeña'}, {scale: 'Ensalada mixta', noScale: 'Libre'}, {scale: '10g Nueces', noScale: 'Mitad de puñado'}] }, { name: 'Opción 2: Claras de huevo', items: [{scale: '150g Claras', noScale: '5 Claras'}, {scale: 'Tomate/Cebolla', noScale: 'Al gusto'}] }] }
+        ]
+      },
+      workoutPlan: [
+        { day: 'Día 1', title: 'Glúteos y Pierna (Sin dolor lumbar)', exercises: [
+          { name: 'Puente de glúteo', sets: '4', reps: '20', note: 'No arquees la espalda al subir.', youtubeId: "LkCJxld5Bj4" },
+          { name: 'Sentadilla a cajón/silla', sets: '3', reps: '15', note: 'Siéntate y levántate.', youtubeId: "ba8tr1NzwXU" },
+          { name: 'Clamshells', sets: '3', reps: '15 x pierna', note: 'Activación lateral.', youtubeId: "rgljhH1X4vc" },
+          { name: 'Plancha apoyando rodillas', sets: '3', reps: '30 seg', note: 'Protege tu zona lumbar.', youtubeId: "aFk1SjShgO4" }
+        ]},
+        { day: 'Día 2', title: 'Tren Superior Suave', exercises: [
+          { name: 'Flexiones en pared o mesa', sets: '3', reps: '12', note: 'Mantén el cuerpo recto.', youtubeId: "zUymek3A64A" },
+          { name: 'Back Widows', sets: '3', reps: '12', note: 'Acostada boca arriba.', youtubeId: "jDafIn0WMUw" },
+          { name: 'Fondos en silla (rodillas dobladas)', sets: '3', reps: '10', note: 'Sin bajar demasiado.', youtubeId: "jDafIn0WMUw" }
+        ]},
+        { day: 'Día 3', title: 'Estabilidad Core (Anti-dolor)', exercises: [
+          { name: 'Bird-Dog', sets: '3', reps: '8 x lado', note: 'Excelente para dolor lumbar.', youtubeId: "OdP8gNwsndM" },
+          { name: 'Plancha lateral (en rodillas)', sets: '3', reps: '20 seg', note: 'Mantén cadera alta.', youtubeId: "vyLwEzLWe_g" },
+          { name: 'Curl-up McGill', sets: '3', reps: '10', note: 'Manos bajo espalda baja.', youtubeId: "fJi6F0VDqLY" }
+        ]},
+        { day: 'Día 4', title: 'Cadera y Glúteo', exercises: [
+          { name: 'Puente a una pierna', sets: '3', reps: '10 x pierna', note: 'Cuidado con la espalda.', youtubeId: "LkCJxld5Bj4" },
+          { name: 'Elevación lateral de pierna', sets: '3', reps: '20', note: 'Acostada de lado.', youtubeId: "ww-6lRXvI9Y" },
+          { name: 'Toques de talón (Heel taps)', sets: '3', reps: '20', note: 'Trabaja el abdomen inferior.', youtubeId: "m8lSq4SC_eM" }
+        ]},
+        { day: 'Día 5', title: 'Cuerpo Completo', exercises: [
+          { name: 'Step-ups en silla', sets: '3', reps: '10 x pierna', note: 'Controla la bajada.', youtubeId: "ww-6lRXvI9Y" },
+          { name: 'Flutter Kicks', sets: '3', reps: '30 seg', note: 'Manos debajo de los glúteos.', youtubeId: "ybdeVE83b4E" },
+          { name: 'Superman holds suave', sets: '3', reps: '15 seg', note: 'Eleva poco, sin forzar.', youtubeId: "ww-6lRXvI9Y" }
         ]}
       ]
     }
@@ -267,17 +312,38 @@ export default function App() {
   };
 
   const checkAndTriggerExertion = (newSets, exIdx, totalSets) => {
-    let allDone = true;
+    // Verificar si el ejercicio actual está completado
+    let currentExDone = true;
     for (let i = 0; i < totalSets; i++) {
       if (!newSets[`${activeProfile}-${activeDay}-${exIdx}-${i}`]) {
-        allDone = false; break;
+        currentExDone = false; break;
       }
     }
     
-    if (allDone) {
+    // Verificar si TODOS los ejercicios del día están completados
+    let dayComplete = true;
+    const currentPlan = profiles[activeProfile].workoutPlan[activeDay];
+    currentPlan.exercises.forEach((ex, eIdx) => {
+      const tSets = parseInt(ex.sets);
+      for(let i = 0; i < tSets; i++) {
+        if(!newSets[`${activeProfile}-${activeDay}-${eIdx}-${i}`]) {
+          dayComplete = false;
+        }
+      }
+    });
+
+    if (dayComplete) {
+      // Día Finalizado
+      setIsTimerRunning(false); // Detenemos el temporizador
+      setTimerMode('rest');
+      setShowCongratsModal(true); // Mostramos felicitación en vez de esfuerzo
+      markTodayCalendar();
+    } else if (currentExDone) {
+      // Ejercicio completado, pasamos a fatiga
       setCurrentMotivation(motivaciones[Math.floor(Math.random() * motivaciones.length)]);
       setShowExertionModal(true);
     } else {
+      // Serie normal completada
       resetTimer(60, 'rest');
     }
   };
@@ -285,12 +351,9 @@ export default function App() {
   const handleExertionResponse = (restTime) => {
     setShowExertionModal(false);
     resetTimer(restTime, 'rest');
-    
     const currentPlan = profiles[activeProfile].workoutPlan[activeDay];
     if (activeExerciseIdx < currentPlan.exercises.length - 1) {
       setActiveExerciseIdx(prev => prev + 1);
-    } else {
-      markTodayCalendar();
     }
   };
 
@@ -338,16 +401,20 @@ export default function App() {
       <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 text-white font-sans">
         <HeartPulse className="w-16 h-16 text-red-500 mb-6 animate-pulse" />
         <h1 className="text-4xl font-black mb-2">FitPlan Duo</h1>
-        <p className="text-slate-400 mb-12 tracking-widest uppercase text-sm font-bold">Selecciona tu perfil</p>
+        <p className="text-slate-400 mb-10 tracking-widest uppercase text-sm font-bold">Selecciona tu perfil</p>
         
-        <div className="w-full max-w-sm space-y-4">
-          <button onClick={() => setActiveProfile('Andros')} className="w-full bg-blue-600 hover:bg-blue-700 text-white p-6 rounded-3xl font-black text-xl flex justify-between items-center transition-all active:scale-95 shadow-lg shadow-blue-900/50">
-            <span>ANDROS</span>
-            <Users className="w-6 h-6 opacity-50" />
+        <div className="w-full max-w-sm grid grid-cols-1 gap-4">
+          <button onClick={() => setActiveProfile('Andros')} className="w-full bg-blue-600 hover:bg-blue-700 text-white p-5 rounded-3xl font-black text-xl flex justify-between items-center transition-all active:scale-95 shadow-lg shadow-blue-900/50">
+            <span>ANDROS</span><Users className="w-6 h-6 opacity-50" />
           </button>
-          <button onClick={() => setActiveProfile('Charlotte')} className="w-full bg-pink-600 hover:bg-pink-700 text-white p-6 rounded-3xl font-black text-xl flex justify-between items-center transition-all active:scale-95 shadow-lg shadow-pink-900/50">
-            <span>CHARLOTTE</span>
-            <Users className="w-6 h-6 opacity-50" />
+          <button onClick={() => setActiveProfile('Charlotte')} className="w-full bg-pink-600 hover:bg-pink-700 text-white p-5 rounded-3xl font-black text-xl flex justify-between items-center transition-all active:scale-95 shadow-lg shadow-pink-900/50">
+            <span>CHARLOTTE</span><Users className="w-6 h-6 opacity-50" />
+          </button>
+          <button onClick={() => setActiveProfile('Eliot')} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-5 rounded-3xl font-black text-xl flex justify-between items-center transition-all active:scale-95 shadow-lg shadow-emerald-900/50">
+            <span>ELIOT</span><Users className="w-6 h-6 opacity-50" />
+          </button>
+          <button onClick={() => setActiveProfile('Alejandra')} className="w-full bg-purple-600 hover:bg-purple-700 text-white p-5 rounded-3xl font-black text-xl flex justify-between items-center transition-all active:scale-95 shadow-lg shadow-purple-900/50">
+            <span>ALEJANDRA</span><Users className="w-6 h-6 opacity-50" />
           </button>
         </div>
       </div>
@@ -369,6 +436,11 @@ export default function App() {
 
   const getDaysInMonth = () => new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
   const currentMonthName = new Date().toLocaleString('es-ES', { month: 'long' }).toUpperCase();
+  
+  // Variables para la duración del plan
+  const planTotalDias = 20; // 4 Semanas de entrenamiento
+  const diasCompletadosPlan = Object.keys(calendarData).filter(k => k.endsWith(`-${activeProfile}`) && calendarData[k]).length;
+  const planProgresoPorcentaje = Math.min(100, Math.round((diasCompletadosPlan / planTotalDias) * 100));
 
   const currentExercise = currentPlan.exercises[activeExerciseIdx];
   const isTimeBased = currentExercise.reps.toLowerCase().includes('seg') || currentExercise.reps.toLowerCase().includes('min');
@@ -379,7 +451,31 @@ export default function App() {
   return (
     <div className={`min-h-screen bg-slate-50 font-sans ${activeTab === 'entrenamiento' ? 'pb-44' : 'pb-24'}`}>
       
-      {showExertionModal && (
+      {/* MODAL DE FELICITACIÓN AL TERMINAR EL DÍA */}
+      {showCongratsModal && (
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in zoom-in duration-300">
+          <div className="bg-white rounded-[2rem] p-8 w-full max-w-sm shadow-2xl border-4 border-yellow-400 transform transition-all text-center flex flex-col items-center">
+            <div className="w-24 h-24 bg-yellow-100 rounded-full flex items-center justify-center mb-6 shadow-inner">
+              <Trophy className="w-12 h-12 text-yellow-500" />
+            </div>
+            <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tight mb-2">¡Día Completado!</h2>
+            <p className="text-slate-500 font-bold mb-6">Increíble trabajo, {activeProfile}. Has finalizado tu rutina de hoy con éxito.</p>
+            
+            <div className="flex gap-2 w-full justify-center mb-8">
+              <Star className="w-6 h-6 text-yellow-400 fill-yellow-400 animate-pulse" />
+              <Star className="w-6 h-6 text-yellow-400 fill-yellow-400 animate-pulse delay-75" />
+              <Star className="w-6 h-6 text-yellow-400 fill-yellow-400 animate-pulse delay-150" />
+            </div>
+
+            <button onClick={() => { setShowCongratsModal(false); setActiveTab('progreso'); }} className="w-full bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-2xl font-black text-lg transition-all active:scale-95 shadow-lg shadow-blue-200">
+              Ver mi Progreso
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE ESFUERZO ADAPTATIVO */}
+      {showExertionModal && !showCongratsModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-[2rem] p-6 w-full max-w-sm shadow-2xl border-4 border-slate-100 transform transition-all">
             <div className="bg-blue-50 text-blue-800 p-4 rounded-2xl mb-6 flex gap-3 items-start border border-blue-100">
@@ -408,6 +504,7 @@ export default function App() {
         </div>
       )}
 
+      {/* HEADER */}
       <div className="bg-slate-900 text-white p-5 shadow-md sticky top-0 z-20">
         <div className="flex justify-between items-center max-w-2xl mx-auto">
           <div>
@@ -424,9 +521,14 @@ export default function App() {
 
       <div className="max-w-2xl mx-auto p-4 space-y-4">
         
+        {/* --- PESTAÑA ENTRENAMIENTO --- */}
         {activeTab === 'entrenamiento' && (
           <div className="space-y-4 animate-in fade-in duration-300">
-            <div className={`p-3 rounded-xl flex items-start gap-3 text-sm ${activeProfile==='Charlotte'?'bg-pink-50 border-pink-100 text-pink-800':'bg-amber-50 border-amber-100 text-amber-800'} border shadow-sm`}>
+            <div className={`p-3 rounded-xl flex items-start gap-3 text-sm ${
+              activeProfile==='Charlotte' ? 'bg-pink-50 border-pink-100 text-pink-800' : 
+              activeProfile==='Alejandra' ? 'bg-purple-50 border-purple-100 text-purple-800' :
+              activeProfile==='Eliot' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' :
+              'bg-amber-50 border-amber-100 text-amber-800'} border shadow-sm`}>
               <AlertTriangle className="w-5 h-5 shrink-0" />
               <p><strong>Aviso Técnico:</strong> {currentProfile.warning}</p>
             </div>
@@ -519,6 +621,7 @@ export default function App() {
           </div>
         )}
 
+        {/* --- PESTAÑA DIETA --- */}
         {activeTab === 'nutricion' && (
           <div className="space-y-4 animate-in fade-in duration-300">
              <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
@@ -628,19 +731,40 @@ export default function App() {
           </div>
         )}
 
+        {/* --- PESTAÑA PROGRESO --- */}
         {activeTab === 'progreso' && (
           <div className="space-y-4 animate-in fade-in duration-300">
+            
+            {/* PANEL DE PROGRESO GLOBAL */}
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+              <div className="p-6 bg-blue-600 border-b border-blue-700 flex justify-between items-center text-white">
+                <div>
+                  <h2 className="font-black text-xl uppercase tracking-tighter">Plan de 4 Semanas</h2>
+                  <p className="text-[10px] font-bold mt-1 uppercase tracking-widest opacity-80">{planTotalDias} Sesiones Totales</p>
+                </div>
+                <Trophy className="w-8 h-8 opacity-50" />
+              </div>
+              <div className="p-6">
+                <div className="flex justify-between items-end mb-2">
+                  <span className="text-sm font-black text-slate-800 uppercase tracking-tight">Tu Avance</span>
+                  <span className="text-2xl font-black text-blue-600">{diasCompletadosPlan} <span className="text-sm text-slate-400">/ {planTotalDias}</span></span>
+                </div>
+                <div className="w-full bg-slate-100 rounded-full h-4 overflow-hidden border border-slate-200">
+                  <div className="bg-blue-500 h-full rounded-full transition-all duration-1000" style={{ width: `${planProgresoPorcentaje}%` }}></div>
+                </div>
+                <p className="text-center text-[10px] font-bold text-slate-400 mt-4 uppercase tracking-widest">Días de entrenamiento completados</p>
+              </div>
+            </div>
+
+            {/* CALENDARIO */}
             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
               <div className="p-6 bg-slate-50 border-b border-slate-200">
                 <h2 className="font-black text-xl text-slate-800 uppercase tracking-tighter flex items-center gap-2">
-                  <CalendarIcon className="w-6 h-6 text-blue-600" /> Historial
+                  <CalendarIcon className="w-6 h-6 text-blue-600" /> Registro Diario
                 </h2>
                 <p className="text-xs font-bold text-slate-500 mt-1 uppercase tracking-widest">{currentMonthName}</p>
               </div>
               <div className="p-5">
-                <p className="text-xs text-slate-500 font-bold mb-4 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                  Toca un día para marcarlo manualmente. Los días se marcan automáticamente al terminar una rutina completa.
-                </p>
                 <div className="grid grid-cols-7 gap-2">
                   {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((day, i) => (
                     <div key={i} className="text-center text-[10px] font-black text-slate-400 uppercase">{day}</div>
@@ -672,8 +796,8 @@ export default function App() {
         )}
       </div>
 
-      {/* TEMPORIZADOR ELEGANTE TIPO PÍLDORA CON MÁS TRANSPARENCIA */}
-      {activeTab === 'entrenamiento' && (
+      {/* TEMPORIZADOR ELEGANTE TIPO PÍLDORA */}
+      {activeTab === 'entrenamiento' && !showCongratsModal && (
         <div className="fixed bottom-[80px] left-0 right-0 p-3 pointer-events-none z-30">
           <div className={`max-w-[350px] mx-auto rounded-full shadow-2xl p-2 pl-3 flex items-center justify-between pointer-events-auto border transition-all backdrop-blur-md ${timerMode==='work'?'bg-red-600/80 border-red-500/50 shadow-red-500/40':'bg-slate-900/80 border-slate-700/50'} text-white`}>
             
@@ -703,6 +827,7 @@ export default function App() {
         </div>
       )}
 
+      {/* MENÚ NAVEGACIÓN */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 pb-safe shadow-[0_-8px_30px_rgb(0,0,0,0.06)]">
         <div className="max-w-2xl mx-auto flex justify-between px-6 py-3">
           <button onClick={() => setActiveTab('entrenamiento')} className={`flex flex-col items-center p-2 rounded-2xl transition-all w-20 ${activeTab==='entrenamiento'?'text-blue-600 bg-blue-50 shadow-inner border border-blue-100':'text-slate-400 hover:text-slate-600'}`}>
