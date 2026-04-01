@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, Apple, CheckCircle2, AlertTriangle, Timer, Play, Pause, Users, HeartPulse, ChevronDown, Info, Beaker, LogOut, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Brain, Trophy, Star } from 'lucide-react';
+import { Activity, Apple, CheckCircle2, AlertTriangle, Timer, Play, Pause, Users, HeartPulse, ChevronDown, Info, Beaker, LogOut, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Brain, Trophy, Star, Target } from 'lucide-react';
 
 function useLocalStorage(key, initialValue) {
   const [value, setValue] = useState(() => {
@@ -63,6 +63,8 @@ export default function App() {
   const [showExertionModal, setShowExertionModal] = useState(false);
   const [showCongratsModal, setShowCongratsModal] = useState(false);
   const [currentMotivation, setCurrentMotivation] = useState("");
+
+  const [viewDate, setViewDate] = useState(new Date());
 
   const playBeep = () => {
     if (typeof window === 'undefined') return;
@@ -397,16 +399,20 @@ export default function App() {
   };
 
   const markTodayCalendar = () => {
-    const today = new Date().toISOString().split('T')[0];
-    setCalendarData(prev => ({ ...prev, [`${today}-${activeProfile}`]: true }));
+    const today = new Date();
+    const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    setCalendarData(prev => ({ ...prev, [`${dateStr}-${activeProfile}`]: true }));
   };
 
   const toggleCalendarDay = (dayNum) => {
-    const d = new Date();
-    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+    const dateStr = `${viewDate.getFullYear()}-${String(viewDate.getMonth() + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
     const key = `${dateStr}-${activeProfile}`;
     setCalendarData(prev => ({ ...prev, [key]: !prev[key] }));
   };
+
+  const prevMonth = () => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1));
+  const nextMonth = () => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1));
+  const goToToday = () => setViewDate(new Date());
 
   const handleMealChange = (mealIndex, optionIndex) => {
     setMealSelections(prev => ({ ...prev, [`${activeProfile}-${mealIndex}`]: parseInt(optionIndex) }));
@@ -451,15 +457,17 @@ export default function App() {
     return total === 0 ? 0 : Math.round((done/total)*100);
   };
 
-  const getDaysInMonth = () => new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
-  const currentMonthName = new Date().toLocaleString('es-ES', { month: 'long' }).toUpperCase();
+  const getDaysInViewMonth = () => new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
+  const viewMonthName = viewDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase();
+  
+  const actualDate = new Date();
+  const isCurrentMonth = viewDate.getFullYear() === actualDate.getFullYear() && viewDate.getMonth() === actualDate.getMonth();
   
   const planTotalDias = 20;
   const diasCompletadosPlan = Object.keys(calendarData).filter(k => k.endsWith(`-${activeProfile}`) && calendarData[k]).length;
   const planProgresoPorcentaje = Math.min(100, Math.round((diasCompletadosPlan / planTotalDias) * 100));
 
   const currentExercise = currentPlan.exercises[activeExerciseIdx];
-  
   const isTimeBased = currentExercise.reps.toLowerCase().includes('seg') || currentExercise.reps.toLowerCase().includes('min');
   const hasSides = currentExercise.reps.toLowerCase().includes('lado') || currentExercise.reps.toLowerCase().includes('pierna');
   const isBilateralTimer = isTimeBased && hasSides; 
@@ -468,7 +476,6 @@ export default function App() {
   const finalTime = currentExercise.reps.toLowerCase().includes('min') ? timeValue * 60 : timeValue;
   const numSets = parseInt(currentExercise.sets);
 
-  // LOGICA DE FORMATO DE REPETICIONES
   let formattedReps = currentExercise.reps.toUpperCase();
   if (!isTimeBased) {
     if (formattedReps.includes(' X ')) {
@@ -773,54 +780,102 @@ export default function App() {
 
         {activeTab === 'progreso' && (
           <div className="space-y-4 animate-in fade-in duration-300">
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="p-6 bg-blue-600 border-b border-blue-700 flex justify-between items-center text-white">
-                <div>
-                  <h2 className="font-black text-xl uppercase tracking-tighter">Plan de 4 Semanas</h2>
-                  <p className="text-[10px] font-bold mt-1 uppercase tracking-widest opacity-80">{planTotalDias} Sesiones Totales</p>
-                </div>
-                <Trophy className="w-8 h-8 opacity-50" />
-              </div>
-              <div className="p-6">
-                <div className="flex justify-between items-end mb-2">
-                  <span className="text-sm font-black text-slate-800 uppercase tracking-tight">Tu Avance</span>
-                  <span className="text-2xl font-black text-blue-600">{diasCompletadosPlan} <span className="text-sm text-slate-400">/ {planTotalDias}</span></span>
-                </div>
-                <div className="w-full bg-slate-100 rounded-full h-4 overflow-hidden border border-slate-200">
-                  <div className="bg-blue-500 h-full rounded-full transition-all duration-1000" style={{ width: `${planProgresoPorcentaje}%` }}></div>
-                </div>
-                <p className="text-center text-[10px] font-bold text-slate-400 mt-4 uppercase tracking-widest">Días de entrenamiento completados</p>
-              </div>
-            </div>
-
+            
+            {/* AVANCE GLOBAL DE TODOS LOS PERFILES */}
             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
               <div className="p-6 bg-slate-50 border-b border-slate-200">
                 <h2 className="font-black text-xl text-slate-800 uppercase tracking-tighter flex items-center gap-2">
-                  <CalendarIcon className="w-6 h-6 text-blue-600" /> Registro Diario
+                  <Target className="w-6 h-6 text-indigo-600" /> Avance Global
                 </h2>
-                <p className="text-xs font-bold text-slate-500 mt-1 uppercase tracking-widest">{currentMonthName}</p>
+                <p className="text-[10px] font-bold mt-1 uppercase tracking-widest text-slate-500">Sesiones completadas (Meta: {planTotalDias})</p>
+              </div>
+              <div className="p-5 space-y-5">
+                {Object.keys(profiles).map(profileName => {
+                  const completados = Object.keys(calendarData).filter(k => k.endsWith(`-${profileName}`) && calendarData[k]).length;
+                  const pct = Math.min(100, Math.round((completados / planTotalDias) * 100));
+                  
+                  const colorClass = 
+                    profileName === 'Andros' ? 'bg-blue-500' :
+                    profileName === 'Charlotte' ? 'bg-pink-500' :
+                    profileName === 'Eliot' ? 'bg-emerald-500' : 'bg-purple-500';
+
+                  return (
+                    <div key={profileName}>
+                      <div className="flex justify-between items-end mb-1">
+                        <span className="text-sm font-bold text-slate-700 uppercase">{profileName}</span>
+                        <span className="text-xs font-black text-slate-500">{completados}/{planTotalDias}</span>
+                      </div>
+                      <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden border border-slate-200">
+                        <div className={`${colorClass} h-full rounded-full transition-all duration-1000`} style={{ width: `${pct}%` }}></div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* CALENDARIO CON NAVEGACIÓN Y BLOQUEO DE FUTURO */}
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+              <div className="p-6 bg-slate-50 border-b border-slate-200 flex justify-between items-start">
+                <div>
+                  <h2 className="font-black text-xl text-slate-800 uppercase tracking-tighter flex items-center gap-2">
+                    <CalendarIcon className="w-6 h-6 text-blue-600" /> Registro
+                  </h2>
+                  <div className="flex items-center gap-2 mt-1">
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">{viewMonthName}</p>
+                    {!isCurrentMonth && (
+                      <button onClick={goToToday} className="text-[9px] font-black uppercase tracking-widest bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-0.5 rounded-md transition-colors active:scale-95">
+                        HOY
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={prevMonth} className="w-9 h-9 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center text-slate-600 active:scale-95 transition-all hover:bg-slate-100">
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button 
+                    onClick={nextMonth} 
+                    disabled={isCurrentMonth}
+                    className={`w-9 h-9 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center transition-all ${isCurrentMonth ? 'text-slate-300 opacity-50 cursor-not-allowed' : 'text-slate-600 active:scale-95 hover:bg-slate-100'}`}
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
               <div className="p-5">
                 <div className="grid grid-cols-7 gap-2">
                   {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((day, i) => (
                     <div key={i} className="text-center text-[10px] font-black text-slate-400 uppercase">{day}</div>
                   ))}
-                  {Array.from({length: getDaysInMonth()}).map((_, i) => {
-                    const d = new Date();
-                    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(i+1).padStart(2, '0')}`;
+                  {Array.from({length: getDaysInViewMonth()}).map((_, i) => {
+                    const dayNum = i + 1;
+                    const dateStr = `${viewDate.getFullYear()}-${String(viewDate.getMonth() + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
                     const isDone = calendarData[`${dateStr}-${activeProfile}`];
-                    const isToday = (i+1) === d.getDate();
+                    
+                    const isToday = viewDate.getFullYear() === actualDate.getFullYear() && viewDate.getMonth() === actualDate.getMonth() && dayNum === actualDate.getDate();
+                    
+                    // Lógica para bloquear días futuros
+                    const targetDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), dayNum);
+                    targetDate.setHours(0,0,0,0);
+                    const todayDateZero = new Date(actualDate);
+                    todayDateZero.setHours(0,0,0,0);
+                    const isFuture = targetDate > todayDateZero;
 
                     return (
                       <button 
                         key={i}
-                        onClick={() => toggleCalendarDay(i + 1)}
-                        className={`aspect-square flex flex-col items-center justify-center rounded-xl font-black text-sm transition-all border-2 active:scale-90
-                          ${isDone ? 'bg-green-500 border-green-600 text-white shadow-sm' : 
-                            isToday ? 'bg-blue-50 border-blue-200 text-blue-700' : 
-                            'bg-white border-slate-100 text-slate-600 hover:border-slate-300'}`}
+                        onClick={() => {
+                          if (!isFuture) toggleCalendarDay(dayNum);
+                        }}
+                        disabled={isFuture}
+                        className={`aspect-square flex flex-col items-center justify-center rounded-xl font-black text-sm transition-all border-2 
+                          ${isFuture ? 'bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed' : 
+                            isDone ? 'bg-green-500 border-green-600 text-white shadow-sm active:scale-90' : 
+                            isToday ? 'bg-blue-50 border-blue-200 text-blue-700 active:scale-90' : 
+                            'bg-white border-slate-100 text-slate-600 hover:border-slate-300 active:scale-90'}`}
                       >
-                        {i + 1}
+                        {dayNum}
                         {isDone && <CheckCircle2 className="w-3 h-3 mt-0.5 opacity-90" />}
                       </button>
                     );
