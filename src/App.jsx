@@ -19,22 +19,18 @@ function useLocalStorage(key, initialValue) {
   return [value, setValue];
 }
 
-const YouTubeButton = ({ videoId }) => {
-  const openTutorial = () => {
-    if (typeof window !== 'undefined' && videoId) {
-      window.open(`https://www.youtube.com/shorts/${videoId}`, '_blank', 'noopener,noreferrer');
-    }
-  };
-  
-  if (!videoId) return null;
+const ExerciseGif = ({ exerciseName }) => {
   return (
-    <button onClick={openTutorial} className="w-full h-12 bg-red-600 hover:bg-red-700 text-white rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-sm mb-4">
-      <Play className="w-5 h-5 fill-current" />
-      <div className="flex flex-col items-start text-left">
-        <span className="font-black text-xs leading-none">Ver Técnica</span>
-        <span className="text-[9px] opacity-80 uppercase tracking-wider">YouTube Short</span>
+    <div className="w-full h-44 bg-slate-200 rounded-2xl flex items-center justify-center mb-4 border-2 border-slate-100 overflow-hidden relative shadow-inner">
+      <img 
+        src={`https://placehold.co/600x400/e2e8f0/475569?text=${encodeURIComponent(exerciseName)}\n(Espacio+para+GIF)`} 
+        alt={`Animación de ${exerciseName}`}
+        className="w-full h-full object-cover opacity-80"
+      />
+      <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-lg text-[9px] font-black tracking-widest uppercase text-slate-700 shadow-sm flex items-center gap-1">
+        <Play className="w-3 h-3 fill-current" /> GIF
       </div>
-    </button>
+    </div>
   );
 };
 
@@ -109,31 +105,31 @@ export default function App() {
       },
       workoutPlan: [
         { day: 'Día 1', title: 'Tren Superior (Empuje)', exercises: [
-          { name: 'Flexiones de pecho', sets: '3', reps: '8-15', note: 'Apoya rodillas si es necesario.', youtubeId: "zUymek3A64A" },
-          { name: 'Pike Push-ups', sets: '3', reps: '8-12', note: 'Foco en hombros.', youtubeId: "br9PF4gkXEA" },
-          { name: 'Fondos para tríceps', sets: '3', reps: '10-15', note: 'Espalda cerca de la silla.', youtubeId: "jDafIn0WMUw" },
-          { name: 'Plancha frontal', sets: '3', reps: '30 seg', note: 'Aprieta glúteos y abdomen.', youtubeId: "aFk1SjShgO4" }
+          { name: 'Flexiones de pecho', sets: '3', reps: '8-15', note: 'Apoya rodillas si es necesario.' },
+          { name: 'Pike Push-ups', sets: '3', reps: '8-12', note: 'Foco en hombros.' },
+          { name: 'Fondos para tríceps', sets: '3', reps: '10-15', note: 'Espalda cerca de la silla.' },
+          { name: 'Plancha frontal', sets: '3', reps: '30 seg', note: 'Aprieta glúteos y abdomen.' }
         ]},
         { day: 'Día 2', title: 'Tren Inferior', exercises: [
-          { name: 'Sentadillas', sets: '3', reps: '12-15', note: 'Torso erguido.', youtubeId: "ba8tr1NzwXU" },
-          { name: 'Zancadas hacia atrás', sets: '3', reps: '10', note: 'Menos tensión en rodillas.', youtubeId: "ZRpD5MfIYA0" },
-          { name: 'Puente de glúteo', sets: '4', reps: '15', note: 'Seguro para la hernia.', youtubeId: "LkCJxld5Bj4" },
-          { name: 'Elevación de talones', sets: '4', reps: '20', note: 'Sobre puntas.', youtubeId: "ww-6lRXvI9Y" }
+          { name: 'Sentadillas', sets: '3', reps: '12-15', note: 'Torso erguido.' },
+          { name: 'Zancadas hacia atrás', sets: '3', reps: '10 x pierna', note: 'Menos tensión en rodillas.' },
+          { name: 'Puente de glúteo', sets: '4', reps: '15', note: 'Seguro para la hernia.' },
+          { name: 'Elevación de talones', sets: '4', reps: '20', note: 'Sobre puntas.' }
         ]},
         { day: 'Día 3', title: 'Estabilidad Core (McGill)', exercises: [
-          { name: 'Bird-Dog', sets: '3', reps: '6', note: 'Pausa de 3 seg arriba.', youtubeId: "OdP8gNwsndM" },
-          { name: 'Plancha lateral', sets: '3', reps: '20 seg', note: 'Apoya rodillas si necesitas.', youtubeId: "vyLwEzLWe_g" },
-          { name: 'Curl-up McGill', sets: '3', reps: '8', note: 'Manos bajo zona lumbar.', youtubeId: "fJi6F0VDqLY" }
+          { name: 'Bird-Dog', sets: '3', reps: '6 x lado', note: 'Pausa de 3 seg arriba.' },
+          { name: 'Plancha lateral', sets: '3', reps: '20 seg x lado', note: 'Apoya rodillas si necesitas.' },
+          { name: 'Curl-up McGill', sets: '3', reps: '8', note: 'Manos bajo zona lumbar.' }
         ]},
         { day: 'Día 4', title: 'Tren Superior (Tracción)', exercises: [
-          { name: 'Back Widows', sets: '4', reps: '10-15', note: 'Codos empujan el suelo.', youtubeId: "jDafIn0WMUw" },
-          { name: 'Remo invertido / Deslizamiento', sets: '3', reps: '10', note: 'Tira con la espalda.', youtubeId: "ba8tr1NzwXU" },
-          { name: 'Superman holds', sets: '3', reps: '15 seg', note: 'Eleva pecho suavemente.', youtubeId: "ww-6lRXvI9Y" }
+          { name: 'Back Widows', sets: '4', reps: '10-15', note: 'Codos empujan el suelo.' },
+          { name: 'Remo invertido / Deslizamiento', sets: '3', reps: '10', note: 'Tira con la espalda.' },
+          { name: 'Superman holds', sets: '3', reps: '15 seg', note: 'Eleva pecho suavemente.' }
         ]},
         { day: 'Día 5', title: 'Tren Inferior y Core', exercises: [
-          { name: 'Sentadilla Búlgara', sets: '3', reps: '8-12', note: 'Pie trasero en silla.', youtubeId: "ZRpD5MfIYA0" },
-          { name: 'Step-ups', sets: '3', reps: '10', note: 'Sube a silla firme.', youtubeId: "ww-6lRXvI9Y" },
-          { name: 'Wall Sit', sets: '3', reps: '45 seg', note: 'Espalda en pared.', youtubeId: "ba8tr1NzwXU" }
+          { name: 'Sentadilla Búlgara', sets: '3', reps: '8-12 x pierna', note: 'Pie trasero en silla.' },
+          { name: 'Step-ups', sets: '3', reps: '10 x pierna', note: 'Sube a silla firme.' },
+          { name: 'Wall Sit', sets: '3', reps: '45 seg', note: 'Espalda en pared.' }
         ]}
       ]
     },
@@ -150,30 +146,30 @@ export default function App() {
       },
       workoutPlan: [
         { day: 'Día 1', title: 'Glúteos y Core', exercises: [
-          { name: 'Puente de glúteo', sets: '4', reps: '15-20', note: 'Aprieta 2 seg arriba.', youtubeId: "LkCJxld5Bj4" },
-          { name: 'Frog Pumps', sets: '3', reps: '20', note: 'Suelas juntas.', youtubeId: "rgljhH1X4vc" },
-          { name: 'Elevación lateral', sets: '3', reps: '15', note: 'Acostada de lado.', youtubeId: "ww-6lRXvI9Y" },
-          { name: 'Plancha (Plank)', sets: '3', reps: '30 seg', note: 'Abdomen apretado.', youtubeId: "m8lSq4SC_eM" }
+          { name: 'Puente de glúteo', sets: '4', reps: '15-20', note: 'Aprieta 2 seg arriba.' },
+          { name: 'Frog Pumps', sets: '3', reps: '20', note: 'Suelas juntas.' },
+          { name: 'Elevación lateral', sets: '3', reps: '15 x pierna', note: 'Acostada de lado.' },
+          { name: 'Plancha (Plank)', sets: '3', reps: '30 seg', note: 'Abdomen apretado.' }
         ]},
         { day: 'Día 2', title: 'Tren Superior', exercises: [
-          { name: 'Flexiones rodillas', sets: '3', reps: '10-15', note: 'Cojín bajo rodillas.', youtubeId: "zUymek3A64A" },
-          { name: 'Back Widows', sets: '3', reps: '12', note: 'Empuja con codos.', youtubeId: "jDafIn0WMUw" },
-          { name: 'Fondos tríceps', sets: '3', reps: '12', note: 'Espalda cerca silla.', youtubeId: "jDafIn0WMUw" }
+          { name: 'Flexiones rodillas', sets: '3', reps: '10-15', note: 'Cojín bajo rodillas.' },
+          { name: 'Back Widows', sets: '3', reps: '12', note: 'Empuja con codos.' },
+          { name: 'Fondos tríceps', sets: '3', reps: '12', note: 'Espalda cerca silla.' }
         ]},
         { day: 'Día 3', title: 'Glúteo Aislado', exercises: [
-          { name: 'Puente una pierna', sets: '3', reps: '12', note: 'Empuja con talón.', youtubeId: "LkCJxld5Bj4" },
-          { name: 'Clamshells', sets: '3', reps: '15', note: 'De lado.', youtubeId: "rgljhH1X4vc" },
-          { name: 'Toques de talón', sets: '3', reps: '20', note: 'Boca arriba.', youtubeId: "m8lSq4SC_eM" }
+          { name: 'Puente una pierna', sets: '3', reps: '12 x pierna', note: 'Empuja con talón.' },
+          { name: 'Clamshells', sets: '3', reps: '15 x pierna', note: 'De lado.' },
+          { name: 'Toques de talón', sets: '3', reps: '20 x lado', note: 'Boca arriba.' }
         ]},
         { day: 'Día 4', title: 'Core y Brazos', exercises: [
-          { name: 'Flutter Kicks', sets: '3', reps: '30 seg', note: 'Manos bajo glúteos.', youtubeId: "ybdeVE83b4E" },
-          { name: 'Plancha lateral', sets: '3', reps: '20 seg', note: 'Oblicuos.', youtubeId: "vyLwEzLWe_g" },
-          { name: 'Superman holds', sets: '3', reps: '15 seg', note: 'Zona lumbar suave.', youtubeId: "ww-6lRXvI9Y" }
+          { name: 'Flutter Kicks', sets: '3', reps: '30 seg', note: 'Manos bajo glúteos.' },
+          { name: 'Plancha lateral', sets: '3', reps: '20 seg x lado', note: 'Oblicuos.' },
+          { name: 'Superman holds', sets: '3', reps: '15 seg', note: 'Zona lumbar suave.' }
         ]},
         { day: 'Día 5', title: 'Cadera', exercises: [
-          { name: 'Peso Muerto Rumano', sets: '3', reps: '15', note: 'Rodillas casi estiradas.', youtubeId: "mYWE12heiDA" },
-          { name: 'Puente Isométrico', sets: '3', reps: '45 seg', note: 'Mantén cadera arriba.', youtubeId: "LkCJxld5Bj4" },
-          { name: 'Elevación piernas', sets: '3', reps: '15', note: 'Piernas rectas.', youtubeId: "HrxOWhPdsOY" }
+          { name: 'Peso Muerto Rumano', sets: '3', reps: '15', note: 'Rodillas casi estiradas.' },
+          { name: 'Puente Isométrico', sets: '3', reps: '45 seg', note: 'Mantén cadera arriba.' },
+          { name: 'Elevación piernas', sets: '3', reps: '15', note: 'Piernas rectas.' }
         ]}
       ]
     },
@@ -190,31 +186,31 @@ export default function App() {
       },
       workoutPlan: [
         { day: 'Día 1', title: 'Empuje (Pecho/Tríceps)', exercises: [
-          { name: 'Flexiones de pecho', sets: '3', reps: '10-15', note: 'Cuerpo recto, sin arquear.', youtubeId: "zUymek3A64A" },
-          { name: 'Pike Push-ups', sets: '3', reps: '8-12', note: 'Para hombros.', youtubeId: "br9PF4gkXEA" },
-          { name: 'Fondos en silla', sets: '3', reps: '12-15', note: 'Baja controlado.', youtubeId: "jDafIn0WMUw" },
-          { name: 'Plancha frontal', sets: '3', reps: '40 seg', note: 'Aprieta el abdomen.', youtubeId: "aFk1SjShgO4" }
+          { name: 'Flexiones de pecho', sets: '3', reps: '10-15', note: 'Cuerpo recto, sin arquear.' },
+          { name: 'Pike Push-ups', sets: '3', reps: '8-12', note: 'Para hombros.' },
+          { name: 'Fondos en silla', sets: '3', reps: '12-15', note: 'Baja controlado.' },
+          { name: 'Plancha frontal', sets: '3', reps: '40 seg', note: 'Aprieta el abdomen.' }
         ]},
         { day: 'Día 2', title: 'Piernas (Sin tensión en pies)', exercises: [
-          { name: 'Sentadillas', sets: '3', reps: '15', note: 'Pie completamente plano.', youtubeId: "ba8tr1NzwXU" },
-          { name: 'Zancadas estáticas', sets: '3', reps: '10 x pierna', note: 'Baja recto, suave.', youtubeId: "ZRpD5MfIYA0" },
-          { name: 'Puente de glúteo', sets: '3', reps: '20', note: 'Empuja con los talones.', youtubeId: "LkCJxld5Bj4" },
-          { name: 'Wall Sit (Silla invisible)', sets: '3', reps: '45 seg', note: 'Espalda a la pared.', youtubeId: "ba8tr1NzwXU" }
+          { name: 'Sentadillas', sets: '3', reps: '15', note: 'Pie completamente plano.' },
+          { name: 'Zancadas estáticas', sets: '3', reps: '10 x pierna', note: 'Baja recto, suave.' },
+          { name: 'Puente de glúteo', sets: '3', reps: '20', note: 'Empuja con los talones.' },
+          { name: 'Wall Sit (Silla invisible)', sets: '3', reps: '45 seg', note: 'Espalda a la pared.' }
         ]},
         { day: 'Día 3', title: 'Core y Cardio', exercises: [
-          { name: 'Bird-Dog', sets: '3', reps: '10', note: 'Lento y controlado.', youtubeId: "OdP8gNwsndM" },
-          { name: 'Plancha lateral', sets: '3', reps: '30 seg', note: 'Mantén la cadera arriba.', youtubeId: "vyLwEzLWe_g" },
-          { name: 'Jumping Jacks (Suaves)', sets: '3', reps: '45 seg', note: 'Si hay calambre, haz pasos laterales.', youtubeId: "ww-6lRXvI9Y" }
+          { name: 'Bird-Dog', sets: '3', reps: '10 x lado', note: 'Lento y controlado.' },
+          { name: 'Plancha lateral', sets: '3', reps: '30 seg x lado', note: 'Mantén la cadera arriba.' },
+          { name: 'Jumping Jacks (Suaves)', sets: '3', reps: '45 seg', note: 'Si hay calambre, haz pasos laterales.' }
         ]},
         { day: 'Día 4', title: 'Tracción (Espalda/Bíceps)', exercises: [
-          { name: 'Back Widows', sets: '4', reps: '15', note: 'Empuja con los codos.', youtubeId: "jDafIn0WMUw" },
-          { name: 'Remo invertido en mesa', sets: '3', reps: '10', note: 'Usa una mesa firme.', youtubeId: "ba8tr1NzwXU" },
-          { name: 'Superman holds', sets: '3', reps: '20 seg', note: 'Tensa la espalda baja.', youtubeId: "ww-6lRXvI9Y" }
+          { name: 'Back Widows', sets: '4', reps: '15', note: 'Empuja con los codos.' },
+          { name: 'Remo invertido en mesa', sets: '3', reps: '10', note: 'Usa una mesa firme.' },
+          { name: 'Superman holds', sets: '3', reps: '20 seg', note: 'Tensa la espalda baja.' }
         ]},
         { day: 'Día 5', title: 'Full Body', exercises: [
-          { name: 'Burpees sin salto', sets: '3', reps: '10', note: 'Evita el impacto en los pies.', youtubeId: "ba8tr1NzwXU" },
-          { name: 'Sentadilla Búlgara', sets: '3', reps: '10 x pierna', note: 'Usa una silla.', youtubeId: "ZRpD5MfIYA0" },
-          { name: 'Flexiones declinadas', sets: '3', reps: '10', note: 'Pies en silla.', youtubeId: "zUymek3A64A" }
+          { name: 'Burpees sin salto', sets: '3', reps: '10', note: 'Evita el impacto en los pies.' },
+          { name: 'Sentadilla Búlgara', sets: '3', reps: '10 x pierna', note: 'Usa una silla.' },
+          { name: 'Flexiones declinadas', sets: '3', reps: '10', note: 'Pies en silla.' }
         ]}
       ]
     },
@@ -231,30 +227,30 @@ export default function App() {
       },
       workoutPlan: [
         { day: 'Día 1', title: 'Glúteos y Pierna (Sin dolor lumbar)', exercises: [
-          { name: 'Puente de glúteo', sets: '4', reps: '20', note: 'No arquees la espalda al subir.', youtubeId: "LkCJxld5Bj4" },
-          { name: 'Sentadilla a cajón/silla', sets: '3', reps: '15', note: 'Siéntate y levántate.', youtubeId: "ba8tr1NzwXU" },
-          { name: 'Clamshells', sets: '3', reps: '15 x pierna', note: 'Activación lateral.', youtubeId: "rgljhH1X4vc" },
-          { name: 'Plancha apoyando rodillas', sets: '3', reps: '30 seg', note: 'Protege tu zona lumbar.', youtubeId: "aFk1SjShgO4" }
+          { name: 'Puente de glúteo', sets: '4', reps: '20', note: 'No arquees la espalda al subir.' },
+          { name: 'Sentadilla a cajón/silla', sets: '3', reps: '15', note: 'Siéntate y levántate.' },
+          { name: 'Clamshells', sets: '3', reps: '15 x pierna', note: 'Activación lateral.' },
+          { name: 'Plancha apoyando rodillas', sets: '3', reps: '30 seg', note: 'Protege tu zona lumbar.' }
         ]},
         { day: 'Día 2', title: 'Tren Superior Suave', exercises: [
-          { name: 'Flexiones en pared o mesa', sets: '3', reps: '12', note: 'Mantén el cuerpo recto.', youtubeId: "zUymek3A64A" },
-          { name: 'Back Widows', sets: '3', reps: '12', note: 'Acostada boca arriba.', youtubeId: "jDafIn0WMUw" },
-          { name: 'Fondos en silla (rodillas dobladas)', sets: '3', reps: '10', note: 'Sin bajar demasiado.', youtubeId: "jDafIn0WMUw" }
+          { name: 'Flexiones en pared o mesa', sets: '3', reps: '12', note: 'Mantén el cuerpo recto.' },
+          { name: 'Back Widows', sets: '3', reps: '12', note: 'Acostada boca arriba.' },
+          { name: 'Fondos en silla (rodillas dobladas)', sets: '3', reps: '10', note: 'Sin bajar demasiado.' }
         ]},
         { day: 'Día 3', title: 'Estabilidad Core (Anti-dolor)', exercises: [
-          { name: 'Bird-Dog', sets: '3', reps: '8 x lado', note: 'Excelente para dolor lumbar.', youtubeId: "OdP8gNwsndM" },
-          { name: 'Plancha lateral (en rodillas)', sets: '3', reps: '20 seg', note: 'Mantén cadera alta.', youtubeId: "vyLwEzLWe_g" },
-          { name: 'Curl-up McGill', sets: '3', reps: '10', note: 'Manos bajo espalda baja.', youtubeId: "fJi6F0VDqLY" }
+          { name: 'Bird-Dog', sets: '3', reps: '8 x lado', note: 'Excelente para dolor lumbar.' },
+          { name: 'Plancha lateral (en rodillas)', sets: '3', reps: '20 seg x lado', note: 'Mantén cadera alta.' },
+          { name: 'Curl-up McGill', sets: '3', reps: '10', note: 'Manos bajo espalda baja.' }
         ]},
         { day: 'Día 4', title: 'Cadera y Glúteo', exercises: [
-          { name: 'Puente a una pierna', sets: '3', reps: '10 x pierna', note: 'Cuidado con la espalda.', youtubeId: "LkCJxld5Bj4" },
-          { name: 'Elevación lateral de pierna', sets: '3', reps: '20', note: 'Acostada de lado.', youtubeId: "ww-6lRXvI9Y" },
-          { name: 'Toques de talón (Heel taps)', sets: '3', reps: '20', note: 'Trabaja el abdomen inferior.', youtubeId: "m8lSq4SC_eM" }
+          { name: 'Puente a una pierna', sets: '3', reps: '10 x pierna', note: 'Cuidado con la espalda.' },
+          { name: 'Elevación lateral de pierna', sets: '3', reps: '20 x pierna', note: 'Acostada de lado.' },
+          { name: 'Toques de talón (Heel taps)', sets: '3', reps: '20 x lado', note: 'Trabaja el abdomen inferior.' }
         ]},
         { day: 'Día 5', title: 'Cuerpo Completo', exercises: [
-          { name: 'Step-ups en silla', sets: '3', reps: '10 x pierna', note: 'Controla la bajada.', youtubeId: "ww-6lRXvI9Y" },
-          { name: 'Flutter Kicks', sets: '3', reps: '30 seg', note: 'Manos debajo de los glúteos.', youtubeId: "ybdeVE83b4E" },
-          { name: 'Superman holds suave', sets: '3', reps: '15 seg', note: 'Eleva poco, sin forzar.', youtubeId: "ww-6lRXvI9Y" }
+          { name: 'Step-ups en silla', sets: '3', reps: '10 x pierna', note: 'Controla la bajada.' },
+          { name: 'Flutter Kicks', sets: '3', reps: '30 seg', note: 'Manos debajo de los glúteos.' },
+          { name: 'Superman holds suave', sets: '3', reps: '15 seg', note: 'Eleva poco, sin forzar.' }
         ]}
       ]
     }
@@ -287,10 +283,17 @@ export default function App() {
       setIsTimerRunning(false);
       playBeep();
       if (timerMode === 'work') {
-        const newSets = { ...completedSets, [activeWorkSet.key]: true };
-        setCompletedSets(newSets);
-        checkAndTriggerExertion(newSets, activeWorkSet.exIdx, activeWorkSet.totalSets);
-        setActiveWorkSet(null);
+        const { key, exIdx, totalSets, isBilateralTimer, side } = activeWorkSet;
+        
+        if (isBilateralTimer && side === 1) {
+          setCompletedSets(prev => ({ ...prev, [key]: 1 }));
+          setActiveWorkSet(null);
+        } else {
+          const newSets = { ...completedSets, [key]: true };
+          setCompletedSets(newSets);
+          checkAndTriggerExertion(newSets, exIdx, totalSets);
+          setActiveWorkSet(null);
+        }
       }
     }
     return () => clearInterval(interval);
@@ -312,38 +315,33 @@ export default function App() {
   };
 
   const checkAndTriggerExertion = (newSets, exIdx, totalSets) => {
-    // Verificar si el ejercicio actual está completado
     let currentExDone = true;
     for (let i = 0; i < totalSets; i++) {
-      if (!newSets[`${activeProfile}-${activeDay}-${exIdx}-${i}`]) {
+      if (newSets[`${activeProfile}-${activeDay}-${exIdx}-${i}`] !== true) {
         currentExDone = false; break;
       }
     }
     
-    // Verificar si TODOS los ejercicios del día están completados
     let dayComplete = true;
     const currentPlan = profiles[activeProfile].workoutPlan[activeDay];
     currentPlan.exercises.forEach((ex, eIdx) => {
       const tSets = parseInt(ex.sets);
       for(let i = 0; i < tSets; i++) {
-        if(!newSets[`${activeProfile}-${activeDay}-${eIdx}-${i}`]) {
+        if(newSets[`${activeProfile}-${activeDay}-${eIdx}-${i}`] !== true) {
           dayComplete = false;
         }
       }
     });
 
     if (dayComplete) {
-      // Día Finalizado
-      setIsTimerRunning(false); // Detenemos el temporizador
+      setIsTimerRunning(false);
       setTimerMode('rest');
-      setShowCongratsModal(true); // Mostramos felicitación en vez de esfuerzo
+      setShowCongratsModal(true);
       markTodayCalendar();
     } else if (currentExDone) {
-      // Ejercicio completado, pasamos a fatiga
       setCurrentMotivation(motivaciones[Math.floor(Math.random() * motivaciones.length)]);
       setShowExertionModal(true);
     } else {
-      // Serie normal completada
       resetTimer(60, 'rest');
     }
   };
@@ -357,24 +355,43 @@ export default function App() {
     }
   };
 
-  const toggleSet = (dayIdx, exIdx, setIdx, isTimeBased, timeInSeconds, totalSets) => {
+  const toggleSet = (dayIdx, exIdx, setIdx, isTimeBased, timeInSeconds, totalSets, isBilateralTimer) => {
     const key = `${activeProfile}-${dayIdx}-${exIdx}-${setIdx}`;
-    if (!completedSets[key]) {
+    const status = completedSets[key];
+
+    if (activeWorkSet?.key === key) {
+      setIsTimerRunning(false);
+      setActiveWorkSet(null);
+      return;
+    }
+
+    if (status === true) {
+      setCompletedSets(prev => ({ ...prev, [key]: false }));
+      return;
+    }
+
+    if (isBilateralTimer) {
+      if (!status || status === 0) {
+        setTimerMode('work');
+        setTimeLeft(timeInSeconds);
+        setActiveWorkSet({ key, exIdx, totalSets, isBilateralTimer: true, side: 1 });
+        setIsTimerRunning(true);
+      } else if (status === 1) {
+        setTimerMode('work');
+        setTimeLeft(timeInSeconds);
+        setActiveWorkSet({ key, exIdx, totalSets, isBilateralTimer: true, side: 2 });
+        setIsTimerRunning(true);
+      }
+    } else {
       if (isTimeBased) {
         setTimerMode('work');
         setTimeLeft(timeInSeconds);
-        setActiveWorkSet({ key, exIdx, totalSets });
+        setActiveWorkSet({ key, exIdx, totalSets, isBilateralTimer: false });
         setIsTimerRunning(true);
       } else {
         const newSets = { ...completedSets, [key]: true };
         setCompletedSets(newSets);
         checkAndTriggerExertion(newSets, exIdx, totalSets);
-      }
-    } else {
-      setCompletedSets(prev => ({ ...prev, [key]: false }));
-      if (activeWorkSet?.key === key) {
-        setIsTimerRunning(false);
-        setActiveWorkSet(null);
       }
     }
   };
@@ -429,7 +446,7 @@ export default function App() {
     currentPlan.exercises.forEach((ex, exIdx) => {
       const s = parseInt(ex.sets);
       total += s;
-      for(let i=0; i<s; i++) if(completedSets[`${activeProfile}-${activeDay}-${exIdx}-${i}`]) done++;
+      for(let i=0; i<s; i++) if(completedSets[`${activeProfile}-${activeDay}-${exIdx}-${i}`] === true) done++;
     });
     return total === 0 ? 0 : Math.round((done/total)*100);
   };
@@ -437,21 +454,33 @@ export default function App() {
   const getDaysInMonth = () => new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
   const currentMonthName = new Date().toLocaleString('es-ES', { month: 'long' }).toUpperCase();
   
-  // Variables para la duración del plan
-  const planTotalDias = 20; // 4 Semanas de entrenamiento
+  const planTotalDias = 20;
   const diasCompletadosPlan = Object.keys(calendarData).filter(k => k.endsWith(`-${activeProfile}`) && calendarData[k]).length;
   const planProgresoPorcentaje = Math.min(100, Math.round((diasCompletadosPlan / planTotalDias) * 100));
 
   const currentExercise = currentPlan.exercises[activeExerciseIdx];
+  
   const isTimeBased = currentExercise.reps.toLowerCase().includes('seg') || currentExercise.reps.toLowerCase().includes('min');
+  const hasSides = currentExercise.reps.toLowerCase().includes('lado') || currentExercise.reps.toLowerCase().includes('pierna');
+  const isBilateralTimer = isTimeBased && hasSides; 
+  
   const timeValue = parseInt(currentExercise.reps.match(/\d+/)?.[0] || 0);
   const finalTime = currentExercise.reps.toLowerCase().includes('min') ? timeValue * 60 : timeValue;
   const numSets = parseInt(currentExercise.sets);
 
+  // LOGICA DE FORMATO DE REPETICIONES
+  let formattedReps = currentExercise.reps.toUpperCase();
+  if (!isTimeBased) {
+    if (formattedReps.includes(' X ')) {
+      formattedReps = formattedReps.replace(' X ', ' REPETICIONES X ');
+    } else {
+      formattedReps += ' REPETICIONES';
+    }
+  }
+
   return (
     <div className={`min-h-screen bg-slate-50 font-sans ${activeTab === 'entrenamiento' ? 'pb-44' : 'pb-24'}`}>
       
-      {/* MODAL DE FELICITACIÓN AL TERMINAR EL DÍA */}
       {showCongratsModal && (
         <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in zoom-in duration-300">
           <div className="bg-white rounded-[2rem] p-8 w-full max-w-sm shadow-2xl border-4 border-yellow-400 transform transition-all text-center flex flex-col items-center">
@@ -474,7 +503,6 @@ export default function App() {
         </div>
       )}
 
-      {/* MODAL DE ESFUERZO ADAPTATIVO */}
       {showExertionModal && !showCongratsModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-[2rem] p-6 w-full max-w-sm shadow-2xl border-4 border-slate-100 transform transition-all">
@@ -504,7 +532,6 @@ export default function App() {
         </div>
       )}
 
-      {/* HEADER */}
       <div className="bg-slate-900 text-white p-5 shadow-md sticky top-0 z-20">
         <div className="flex justify-between items-center max-w-2xl mx-auto">
           <div>
@@ -521,7 +548,6 @@ export default function App() {
 
       <div className="max-w-2xl mx-auto p-4 space-y-4">
         
-        {/* --- PESTAÑA ENTRENAMIENTO --- */}
         {activeTab === 'entrenamiento' && (
           <div className="space-y-4 animate-in fade-in duration-300">
             <div className={`p-3 rounded-xl flex items-start gap-3 text-sm ${
@@ -571,11 +597,11 @@ export default function App() {
 
                 <div className="space-y-4">
                   <h3 className="font-black text-slate-900 text-2xl leading-tight uppercase tracking-tight">{currentExercise.name}</h3>
-                  <p className="text-blue-600 font-black text-lg">{currentExercise.sets} SERIES x {currentExercise.reps}</p>
+                  <p className="text-blue-600 font-black text-lg">{currentExercise.sets} SERIES x {formattedReps}</p>
                   <p className="text-sm font-bold text-slate-500 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">💡 {currentExercise.note}</p>
                   
                   <div className="pt-2">
-                    <YouTubeButton videoId={currentExercise.youtubeId} />
+                    <ExerciseGif exerciseName={currentExercise.name} />
                   </div>
 
                   <div className="pt-4 border-t border-slate-100">
@@ -583,28 +609,43 @@ export default function App() {
                     <div className="flex flex-wrap gap-3">
                       {Array.from({length: numSets}).map((_, sIdx) => {
                         const key = `${activeProfile}-${activeDay}-${activeExerciseIdx}-${sIdx}`;
-                        const isDone = completedSets[key];
+                        const status = completedSets[key];
+                        const isDone = status === true;
+                        const isHalfDone = status === 1;
                         const isWorking = activeWorkSet?.key === key;
                         
                         const baseClasses = "h-14 flex items-center justify-center rounded-2xl border-2 font-black transition-all shadow-sm active:scale-95";
-                        const statusClasses = isWorking 
-                          ? "w-28 bg-amber-500 border-amber-600 text-white animate-pulse" 
-                          : isDone 
-                            ? "w-14 bg-green-500 border-green-600 text-white" 
-                            : isTimeBased 
-                              ? "w-24 bg-slate-50 border-slate-200 text-slate-700 hover:border-blue-400 hover:bg-blue-50"
-                              : "w-14 bg-slate-50 border-slate-200 text-slate-700 hover:border-blue-400 hover:bg-blue-50";
+                        
+                        let statusClasses = "";
+                        if (isWorking) {
+                          statusClasses = "w-28 bg-amber-500 border-amber-600 text-white animate-pulse";
+                        } else if (isDone) {
+                          statusClasses = "w-14 bg-green-500 border-green-600 text-white";
+                        } else if (isBilateralTimer) {
+                          statusClasses = isHalfDone 
+                            ? "w-20 bg-blue-100 border-blue-300 text-blue-700" 
+                            : "w-20 bg-slate-50 border-slate-200 text-slate-700 hover:border-blue-400 hover:bg-blue-50";
+                        } else if (isTimeBased) {
+                          statusClasses = "w-24 bg-slate-50 border-slate-200 text-slate-700 hover:border-blue-400 hover:bg-blue-50";
+                        } else {
+                          statusClasses = "w-14 bg-slate-50 border-slate-200 text-slate-700 hover:border-blue-400 hover:bg-blue-50";
+                        }
 
                         return (
                           <button 
                             key={sIdx} 
-                            onClick={() => toggleSet(activeDay, activeExerciseIdx, sIdx, isTimeBased, finalTime, numSets)} 
+                            onClick={() => toggleSet(activeDay, activeExerciseIdx, sIdx, isTimeBased, finalTime, numSets, isBilateralTimer)} 
                             className={`${baseClasses} ${statusClasses}`}
                           >
                             {isWorking ? (
                               <span className="flex items-center gap-2"><Timer className="w-5 h-5"/> {timeLeft}s</span>
                             ) : isDone ? (
                               <CheckCircle2 className="w-7 h-7"/>
+                            ) : isBilateralTimer ? (
+                              <span className="flex items-center gap-1.5 font-mono text-lg tracking-tighter">
+                                {!isHalfDone && <Play className="w-4 h-4 fill-current"/>} 
+                                {isHalfDone ? '1/2' : '0/2'}
+                              </span>
                             ) : isTimeBased ? (
                               <span className="flex items-center gap-1.5"><Play className="w-4 h-4 ml-0.5 fill-current"/> {finalTime}s</span>
                             ) : (
@@ -621,7 +662,6 @@ export default function App() {
           </div>
         )}
 
-        {/* --- PESTAÑA DIETA --- */}
         {activeTab === 'nutricion' && (
           <div className="space-y-4 animate-in fade-in duration-300">
              <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
@@ -731,11 +771,8 @@ export default function App() {
           </div>
         )}
 
-        {/* --- PESTAÑA PROGRESO --- */}
         {activeTab === 'progreso' && (
           <div className="space-y-4 animate-in fade-in duration-300">
-            
-            {/* PANEL DE PROGRESO GLOBAL */}
             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
               <div className="p-6 bg-blue-600 border-b border-blue-700 flex justify-between items-center text-white">
                 <div>
@@ -756,7 +793,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* CALENDARIO */}
             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
               <div className="p-6 bg-slate-50 border-b border-slate-200">
                 <h2 className="font-black text-xl text-slate-800 uppercase tracking-tighter flex items-center gap-2">
@@ -796,7 +832,6 @@ export default function App() {
         )}
       </div>
 
-      {/* TEMPORIZADOR ELEGANTE TIPO PÍLDORA */}
       {activeTab === 'entrenamiento' && !showCongratsModal && (
         <div className="fixed bottom-[80px] left-0 right-0 p-3 pointer-events-none z-30">
           <div className={`max-w-[350px] mx-auto rounded-full shadow-2xl p-2 pl-3 flex items-center justify-between pointer-events-auto border transition-all backdrop-blur-md ${timerMode==='work'?'bg-red-600/80 border-red-500/50 shadow-red-500/40':'bg-slate-900/80 border-slate-700/50'} text-white`}>
@@ -827,7 +862,6 @@ export default function App() {
         </div>
       )}
 
-      {/* MENÚ NAVEGACIÓN */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 pb-safe shadow-[0_-8px_30px_rgb(0,0,0,0.06)]">
         <div className="max-w-2xl mx-auto flex justify-between px-6 py-3">
           <button onClick={() => setActiveTab('entrenamiento')} className={`flex flex-col items-center p-2 rounded-2xl transition-all w-20 ${activeTab==='entrenamiento'?'text-blue-600 bg-blue-50 shadow-inner border border-blue-100':'text-slate-400 hover:text-slate-600'}`}>
