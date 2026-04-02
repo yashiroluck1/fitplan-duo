@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Activity, Apple, CheckCircle2, AlertTriangle, Timer, Play, Pause, Users, HeartPulse, ChevronDown, Info, Beaker, LogOut, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Brain, Trophy, Star, Target, Search, ExternalLink, Cloud, ShieldAlert } from 'lucide-react';
 
 // --- FIREBASE IMPORTS ---
@@ -81,6 +81,8 @@ export default function App() {
   const [currentMotivation, setCurrentMotivation] = useState("");
 
   const [viewDate, setViewDate] = useState(new Date());
+  
+  const initializedProfileRef = useRef(null);
 
   // --- LÓGICA DE SINCRONIZACIÓN GLOBAL ---
   useEffect(() => {
@@ -348,14 +350,17 @@ export default function App() {
     }
   }, [activeProfile]);
 
+  // CORRECCIÓN: Usamos useRef (initializedProfileRef) para asegurar que el día y ejercicio
+  // solo se auto-ajusten la primera vez que cargas el perfil, evitando saltos visuales.
   useEffect(() => {
-    if (activeProfile && !isSyncing) {
+    if (activeProfile && !isSyncing && initializedProfileRef.current !== activeProfile) {
       const completedDays = Object.keys(calendarData).filter(k => k.endsWith(`-${activeProfile}`) && calendarData[k]).length;
       const totalPlanDays = profiles[activeProfile].workoutPlan.length;
       setActiveDay(completedDays % totalPlanDays);
       setActiveExerciseIdx(0);
+      initializedProfileRef.current = activeProfile;
     }
-  }, [activeProfile, calendarData, isSyncing]);
+  }, [activeProfile, calendarData, isSyncing, profiles]);
 
   useEffect(() => {
     let interval = null;
@@ -673,7 +678,7 @@ export default function App() {
               {isSyncing ? <Activity className="w-3 h-3 text-amber-400 animate-spin" /> : <Cloud className="w-3 h-3 text-green-400" />}
             </p>
           </div>
-          <button onClick={() => setActiveProfile(null)} className="bg-slate-800 border border-slate-700 p-2.5 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-red-900/50 hover:border-red-800 hover:text-red-400 transition-colors">
+          <button onClick={() => { setActiveProfile(null); initializedProfileRef.current = null; }} className="bg-slate-800 border border-slate-700 p-2.5 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-red-900/50 hover:border-red-800 hover:text-red-400 transition-colors">
             <LogOut className="w-4 h-4" />
           </button>
         </div>
