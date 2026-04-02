@@ -3,17 +3,24 @@ import { Activity, Apple, CheckCircle2, AlertTriangle, Timer, Play, Pause, Users
 
 // --- FIREBASE IMPORTS ---
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
 
 // --- FIREBASE INIT ---
 let app, auth, db, appId;
 try {
-  const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+  const firebaseConfig = {
+    apiKey: "AIzaSyDt86xpJ2N2w-nuL4-COQz2p3MxhD0Ti_4",
+    authDomain: "fitplan-duo.firebaseapp.com",
+    projectId: "fitplan-duo",
+    storageBucket: "fitplan-duo.firebasestorage.app",
+    messagingSenderId: "878538632619",
+    appId: "1:878538632619:web:c355278cfb419f9f6d36ee"
+  };
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   db = getFirestore(app);
-  appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+  appId = firebaseConfig.projectId;
 } catch (e) {
   console.error("No se pudo inicializar Firebase:", e);
 }
@@ -84,11 +91,7 @@ export default function App() {
 
     const initAuth = async () => {
       try {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
-        }
+        await signInAnonymously(auth);
       } catch (e) {
         console.error("Error de autenticación:", e);
         setIsSyncing(false);
@@ -103,7 +106,7 @@ export default function App() {
   useEffect(() => {
     if (!user || !db) return;
 
-    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'fitplan', 'shared_state');
+    const docRef = doc(db, 'appData', 'shared_state');
     
     const unsub = onSnapshot(docRef, (snap) => {
       if (snap.exists()) {
@@ -127,7 +130,7 @@ export default function App() {
   const updateGlobalState = async (updates) => {
     if (!user || !db) return;
     try {
-      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'fitplan', 'shared_state');
+      const docRef = doc(db, 'appData', 'shared_state');
       await setDoc(docRef, updates, { merge: true });
     } catch (err) {
       console.error("Error al guardar en la nube:", err);
