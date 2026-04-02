@@ -56,7 +56,6 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('entrenamiento');
   const [activeDay, setActiveDay] = useState(0);
   const [activeExerciseIdx, setActiveExerciseIdx] = useState(0);
-  const [useScale, setUseScale] = useLocalStorage('fp-scale', true);
   
   // Perfil seleccionado para ver en la pestaña de Nutrición (Andros puede cambiarlo)
   const [viewedDietProfile, setViewedDietProfile] = useState(null);
@@ -350,8 +349,6 @@ export default function App() {
     }
   }, [activeProfile]);
 
-  // CORRECCIÓN: Usamos useRef (initializedProfileRef) para asegurar que el día y ejercicio
-  // solo se auto-ajusten la primera vez que cargas el perfil, evitando saltos visuales.
   useEffect(() => {
     if (activeProfile && !isSyncing && initializedProfileRef.current !== activeProfile) {
       const completedDays = Object.keys(calendarData).filter(k => k.endsWith(`-${activeProfile}`) && calendarData[k]).length;
@@ -913,11 +910,6 @@ export default function App() {
                   <div className="w-2/3 bg-slate-800 text-[10px] text-white flex items-center justify-center font-bold uppercase tracking-widest">Ayuno (16h)</div>
                   <div className="w-1/3 bg-green-500 text-[10px] text-white flex items-center justify-center font-bold uppercase tracking-widest">Comida (8h)</div>
                 </div>
-
-                <div className="flex bg-slate-200 p-1 rounded-lg mb-6 border border-slate-200 shadow-inner">
-                  <button onClick={() => setUseScale(true)} className={`flex-1 py-2 text-[10px] font-bold rounded-md transition-all uppercase tracking-widest ${useScale ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}>Con Báscula</button>
-                  <button onClick={() => setUseScale(false)} className={`flex-1 py-2 text-[10px] font-bold rounded-md transition-all uppercase tracking-widest ${!useScale ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}>Medidas Caseras</button>
-                </div>
                 
                 <div className="space-y-4">
                   {viewedProfileData.nutrition.meals.map((meal, mIdx) => {
@@ -939,7 +931,7 @@ export default function App() {
                           {meal.options[safeIdx].items.map((it, iti) => (
                             <li key={iti} className="text-xs font-bold text-slate-700 flex items-start gap-2">
                               <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
-                              <span>{useScale ? it.scale : it.noScale}</span>
+                              <span>{it.scale === it.noScale ? it.scale : `${it.scale} (${it.noScale})`}</span>
                             </li>
                           ))}
                         </ul>
