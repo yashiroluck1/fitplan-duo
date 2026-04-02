@@ -1,5 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, Apple, CheckCircle2, AlertTriangle, Timer, Play, Pause, Users, HeartPulse, ChevronDown, Info, Beaker, LogOut, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Brain, Trophy, Star, Target } from 'lucide-react';
+import { Activity, Apple, CheckCircle2, AlertTriangle, Timer, Play, Pause, Users, HeartPulse, ChevronDown, Info, Beaker, LogOut, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Brain, Trophy, Star, Target, Search, ExternalLink, Cloud, ShieldAlert } from 'lucide-react';
+
+// --- FIREBASE IMPORTS ---
+import { initializeApp } from 'firebase/app';
+import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
+
+// --- FIREBASE INIT ---
+let app, auth, db, appId;
+try {
+  const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  db = getFirestore(app);
+  appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+} catch (e) {
+  console.error("No se pudo inicializar Firebase:", e);
+}
 
 function useLocalStorage(key, initialValue) {
   const [value, setValue] = useState(() => {
@@ -19,21 +36,6 @@ function useLocalStorage(key, initialValue) {
   return [value, setValue];
 }
 
-const ExerciseGif = ({ exerciseName }) => {
-  return (
-    <div className="w-full h-44 bg-slate-200 rounded-2xl flex items-center justify-center mb-4 border-2 border-slate-100 overflow-hidden relative shadow-inner">
-      <img 
-        src={`https://placehold.co/600x400/e2e8f0/475569?text=${encodeURIComponent(exerciseName)}\n(Espacio+para+GIF)`} 
-        alt={`Animación de ${exerciseName}`}
-        className="w-full h-full object-cover opacity-80"
-      />
-      <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-lg text-[9px] font-black tracking-widest uppercase text-slate-700 shadow-sm flex items-center gap-1">
-        <Play className="w-3 h-3 fill-current" /> GIF
-      </div>
-    </div>
-  );
-};
-
 const motivaciones = [
   "Tu cerebro está creando nuevas vías neuronales. ¡La resistencia física construye resiliencia mental!",
   "La dopamina liberada al terminar esta serie fortalecerá tu disciplina para mañana.",
@@ -49,11 +51,18 @@ export default function App() {
   const [activeExerciseIdx, setActiveExerciseIdx] = useState(0);
   const [useScale, setUseScale] = useLocalStorage('fp-scale', true);
   
-  const [completedSets, setCompletedSets] = useLocalStorage('fp-sets', {}); 
-  const [mealSelections, setMealSelections] = useLocalStorage('fp-meals', {});
-  const [suppStatus, setSuppStatus] = useLocalStorage('fp-suppStatus', 'none'); 
-  const [suppType, setSuppType] = useLocalStorage('fp-suppType', { protein: false, creatine: false });
-  const [calendarData, setCalendarData] = useLocalStorage('fp-calendar', {});
+  // Perfil seleccionado para ver en la pestaña de Nutrición (Andros puede cambiarlo)
+  const [viewedDietProfile, setViewedDietProfile] = useState(null);
+
+  // Estados Globales Sincronizados (se guardan en la nube)
+  const [completedSets, setCompletedSets] = useState({}); 
+  const [calendarData, setCalendarData] = useState({});
+  const [mealSelections, setMealSelections] = useState({});
+  const [suppData, setSuppData] = useState({}); 
+
+  const [user, setUser] = useState(null);
+  const [isSyncing, setIsSyncing] = useState(true);
+  const [dbError, setDbError] = useState(false);
 
   const [timeLeft, setTimeLeft] = useState(60);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
@@ -65,6 +74,66 @@ export default function App() {
   const [currentMotivation, setCurrentMotivation] = useState("");
 
   const [viewDate, setViewDate] = useState(new Date());
+
+  // --- LÓGICA DE SINCRONIZACIÓN GLOBAL ---
+  useEffect(() => {
+    if (!auth) {
+      setIsSyncing(false);
+      return;
+    }
+
+    const initAuth = async () => {
+      try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+      } catch (e) {
+        console.error("Error de autenticación:", e);
+        setIsSyncing(false);
+      }
+    };
+    
+    initAuth();
+    const unsubscribe = onAuthStateChanged(auth, setUser);
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!user || !db) return;
+
+    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'fitplan', 'shared_state');
+    
+    const unsub = onSnapshot(docRef, (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data.calendarData) setCalendarData(data.calendarData);
+        if (data.completedSets) setCompletedSets(data.completedSets);
+        if (data.mealSelections) setMealSelections(data.mealSelections);
+        if (data.suppData) setSuppData(data.suppData);
+      }
+      setIsSyncing(false);
+      setDbError(false);
+    }, (err) => {
+      console.error("Error escuchando la base de datos:", err);
+      setIsSyncing(false);
+      setDbError(true);
+    });
+
+    return () => unsub();
+  }, [user]);
+
+  const updateGlobalState = async (updates) => {
+    if (!user || !db) return;
+    try {
+      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'fitplan', 'shared_state');
+      await setDoc(docRef, updates, { merge: true });
+    } catch (err) {
+      console.error("Error al guardar en la nube:", err);
+    }
+  };
+  // ----------------------------------------
 
   const playBeep = () => {
     if (typeof window === 'undefined') return;
@@ -258,24 +327,32 @@ export default function App() {
     }
   };
 
+  // Inyectar la opción de Batido si el perfil activo o el visualizado tiene Proteína activada en Firebase
   const profiles = JSON.parse(JSON.stringify(rawProfiles));
-  if (suppType.protein) {
-    Object.keys(profiles).forEach(p => {
+  Object.keys(profiles).forEach(p => {
+    const pSupps = suppData[p] || { status: 'none', protein: false, creatine: false };
+    if (pSupps.protein) {
       profiles[p].nutrition.meals[1].options.push({
         name: 'Opción 3 (Rápida): Batido',
         items: [{scale: '30g Proteína (1 scoop)', noScale: '1 Scoop'}, {scale: '100g Plátano', noScale: '1 Plátano'}, {scale: '15g Maní', noScale: '1 Cda. maní'}]
       });
-    });
-  }
+    }
+  });
 
   useEffect(() => {
     if (activeProfile) {
+      setViewedDietProfile(activeProfile);
+    }
+  }, [activeProfile]);
+
+  useEffect(() => {
+    if (activeProfile && !isSyncing) {
       const completedDays = Object.keys(calendarData).filter(k => k.endsWith(`-${activeProfile}`) && calendarData[k]).length;
       const totalPlanDays = profiles[activeProfile].workoutPlan.length;
       setActiveDay(completedDays % totalPlanDays);
       setActiveExerciseIdx(0);
     }
-  }, [activeProfile, calendarData]);
+  }, [activeProfile, calendarData, isSyncing]);
 
   useEffect(() => {
     let interval = null;
@@ -288,11 +365,14 @@ export default function App() {
         const { key, exIdx, totalSets, isBilateralTimer, side } = activeWorkSet;
         
         if (isBilateralTimer && side === 1) {
-          setCompletedSets(prev => ({ ...prev, [key]: 1 }));
+          const newSets = { ...completedSets, [key]: 1 };
+          setCompletedSets(newSets);
+          updateGlobalState({ completedSets: newSets });
           setActiveWorkSet(null);
         } else {
           const newSets = { ...completedSets, [key]: true };
           setCompletedSets(newSets);
+          updateGlobalState({ completedSets: newSets });
           checkAndTriggerExertion(newSets, exIdx, totalSets);
           setActiveWorkSet(null);
         }
@@ -368,7 +448,9 @@ export default function App() {
     }
 
     if (status === true) {
-      setCompletedSets(prev => ({ ...prev, [key]: false }));
+      const newSets = { ...completedSets, [key]: false };
+      setCompletedSets(newSets);
+      updateGlobalState({ completedSets: newSets });
       return;
     }
 
@@ -393,6 +475,7 @@ export default function App() {
       } else {
         const newSets = { ...completedSets, [key]: true };
         setCompletedSets(newSets);
+        updateGlobalState({ completedSets: newSets });
         checkAndTriggerExertion(newSets, exIdx, totalSets);
       }
     }
@@ -401,13 +484,17 @@ export default function App() {
   const markTodayCalendar = () => {
     const today = new Date();
     const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    setCalendarData(prev => ({ ...prev, [`${dateStr}-${activeProfile}`]: true }));
+    const newCalendar = { ...calendarData, [`${dateStr}-${activeProfile}`]: true };
+    setCalendarData(newCalendar);
+    updateGlobalState({ calendarData: newCalendar });
   };
 
   const toggleCalendarDay = (dayNum) => {
     const dateStr = `${viewDate.getFullYear()}-${String(viewDate.getMonth() + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
     const key = `${dateStr}-${activeProfile}`;
-    setCalendarData(prev => ({ ...prev, [key]: !prev[key] }));
+    const newCalendar = { ...calendarData, [key]: !calendarData[key] };
+    setCalendarData(newCalendar);
+    updateGlobalState({ calendarData: newCalendar });
   };
 
   const prevMonth = () => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1));
@@ -415,16 +502,50 @@ export default function App() {
   const goToToday = () => setViewDate(new Date());
 
   const handleMealChange = (mealIndex, optionIndex) => {
-    setMealSelections(prev => ({ ...prev, [`${activeProfile}-${mealIndex}`]: parseInt(optionIndex) }));
+    if (!viewedDietProfile) return;
+    const newSelections = { ...mealSelections, [`${viewedDietProfile}-${mealIndex}`]: parseInt(optionIndex) };
+    setMealSelections(newSelections);
+    updateGlobalState({ mealSelections: newSelections });
   };
-  const getSelectedMealOption = (mealIndex) => mealSelections[`${activeProfile}-${mealIndex}`] || 0;
+  const getSelectedMealOption = (mealIndex) => {
+    if (!viewedDietProfile) return 0;
+    return mealSelections[`${viewedDietProfile}-${mealIndex}`] || 0;
+  };
+
+  const currentSupps = suppData[viewedDietProfile] || { status: 'none', protein: false, creatine: false };
+  const updateSupps = (updates) => {
+    if (!viewedDietProfile) return;
+    const newSuppsMap = { ...suppData, [viewedDietProfile]: { ...currentSupps, ...updates } };
+    setSuppData(newSuppsMap);
+    updateGlobalState({ suppData: newSuppsMap });
+  };
+
+  const handleSaveSupps = () => {
+    if (currentSupps.protein || currentSupps.creatine) {
+      updateSupps({ status: 'saved' });
+    } else {
+      updateSupps({ status: 'none' });
+    }
+  };
+
+  if (isSyncing && !activeProfile) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 text-white font-sans">
+        <Activity className="w-12 h-12 text-blue-500 mb-6 animate-spin" />
+        <h1 className="text-xl font-black mb-2 animate-pulse">Sincronizando Avances...</h1>
+      </div>
+    );
+  }
 
   if (!activeProfile) {
     return (
       <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 text-white font-sans">
         <HeartPulse className="w-16 h-16 text-red-500 mb-6 animate-pulse" />
         <h1 className="text-4xl font-black mb-2">FitPlan Duo</h1>
-        <p className="text-slate-400 mb-10 tracking-widest uppercase text-sm font-bold">Selecciona tu perfil</p>
+        <p className="text-slate-400 mb-10 tracking-widest uppercase text-sm font-bold flex items-center gap-2">
+          {dbError ? <AlertTriangle className="w-4 h-4 text-red-500" /> : <Cloud className="w-4 h-4 text-green-500" />}
+          Selecciona tu perfil
+        </p>
         
         <div className="w-full max-w-sm grid grid-cols-1 gap-4">
           <button onClick={() => setActiveProfile('Andros')} className="w-full bg-blue-600 hover:bg-blue-700 text-white p-5 rounded-3xl font-black text-xl flex justify-between items-center transition-all active:scale-95 shadow-lg shadow-blue-900/50">
@@ -444,8 +565,8 @@ export default function App() {
     );
   }
 
-  const currentProfile = profiles[activeProfile];
-  const currentPlan = currentProfile.workoutPlan[activeDay] || currentProfile.workoutPlan[0];
+  const currentPlan = profiles[activeProfile].workoutPlan[activeDay] || profiles[activeProfile].workoutPlan[0];
+  const viewedProfileData = profiles[viewedDietProfile] || profiles[activeProfile];
 
   const calculateTotalProgress = () => {
     let total = 0, done = 0;
@@ -465,8 +586,7 @@ export default function App() {
   
   const planTotalDias = 20;
   const diasCompletadosPlan = Object.keys(calendarData).filter(k => k.endsWith(`-${activeProfile}`) && calendarData[k]).length;
-  const planProgresoPorcentaje = Math.min(100, Math.round((diasCompletadosPlan / planTotalDias) * 100));
-
+  
   const currentExercise = currentPlan.exercises[activeExerciseIdx];
   const isTimeBased = currentExercise.reps.toLowerCase().includes('seg') || currentExercise.reps.toLowerCase().includes('min');
   const hasSides = currentExercise.reps.toLowerCase().includes('lado') || currentExercise.reps.toLowerCase().includes('pierna');
@@ -545,7 +665,10 @@ export default function App() {
             <h1 className="text-xl font-bold flex items-center gap-2 text-white">
               <HeartPulse className="w-5 h-5 text-red-500" /> FitPlan Duo
             </h1>
-            <p className="text-slate-400 text-[10px] mt-0.5 uppercase font-bold tracking-widest">{activeProfile}: {currentProfile.goal}</p>
+            <p className="text-slate-400 text-[10px] mt-0.5 uppercase font-bold tracking-widest flex items-center gap-1.5">
+              {activeProfile}: {profiles[activeProfile].goal}
+              {isSyncing ? <Activity className="w-3 h-3 text-amber-400 animate-spin" /> : <Cloud className="w-3 h-3 text-green-400" />}
+            </p>
           </div>
           <button onClick={() => setActiveProfile(null)} className="bg-slate-800 border border-slate-700 p-2.5 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-red-900/50 hover:border-red-800 hover:text-red-400 transition-colors">
             <LogOut className="w-4 h-4" />
@@ -563,11 +686,11 @@ export default function App() {
               activeProfile==='Eliot' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' :
               'bg-amber-50 border-amber-100 text-amber-800'} border shadow-sm`}>
               <AlertTriangle className="w-5 h-5 shrink-0" />
-              <p><strong>Aviso Técnico:</strong> {currentProfile.warning}</p>
+              <p><strong>Aviso Técnico:</strong> {profiles[activeProfile].warning}</p>
             </div>
 
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide px-1">
-              {currentProfile.workoutPlan.map((d, i) => (
+              {profiles[activeProfile].workoutPlan.map((d, i) => (
                 <button 
                   key={i} 
                   onClick={() => { setActiveDay(i); setActiveExerciseIdx(0); }} 
@@ -608,7 +731,16 @@ export default function App() {
                   <p className="text-sm font-bold text-slate-500 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">💡 {currentExercise.note}</p>
                   
                   <div className="pt-2">
-                    <ExerciseGif exerciseName={currentExercise.name} />
+                    <a 
+                      href={`https://www.google.com/search?tbm=isch&q=${encodeURIComponent(currentExercise.name + ' ejercicio form')}`}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 w-full bg-white hover:bg-slate-50 text-slate-700 py-3 rounded-xl font-bold text-sm transition-colors border-2 border-slate-200 shadow-sm active:scale-95"
+                    >
+                      <Search className="w-4 h-4 text-blue-500" />
+                      Buscar ejemplo visual en Google
+                      <ExternalLink className="w-3 h-3 opacity-50 ml-1" />
+                    </a>
                   </div>
 
                   <div className="pt-4 border-t border-slate-100">
@@ -671,54 +803,87 @@ export default function App() {
 
         {activeTab === 'nutricion' && (
           <div className="space-y-4 animate-in fade-in duration-300">
-             <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+             
+             {/* Admin selector: Solo Andros puede elegir de quién ver y modificar la dieta */}
+             {activeProfile === 'Andros' && (
+               <div className="bg-slate-900 p-2 rounded-2xl flex gap-2 overflow-x-auto scrollbar-hide border border-slate-700 shadow-md">
+                 <div className="flex items-center px-3 border-r border-slate-700">
+                   <ShieldAlert className="w-5 h-5 text-amber-500" />
+                 </div>
+                 {Object.keys(profiles).map(p => (
+                   <button 
+                     key={p} 
+                     onClick={() => setViewedDietProfile(p)}
+                     className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shrink-0 ${viewedDietProfile === p ? 'bg-amber-500 text-amber-950 shadow-md' : 'bg-transparent text-slate-400 hover:bg-slate-800'}`}>
+                     {p}
+                   </button>
+                 ))}
+               </div>
+             )}
+
+             <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 relative">
                 <h2 className="font-bold text-lg mb-4 flex items-center gap-2 text-slate-800">
                   <Beaker className="w-5 h-5 text-indigo-500"/> Suplementación
                 </h2>
                 
-                {suppStatus === 'none' && (
+                {currentSupps.status === 'none' && (
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-slate-700 font-bold uppercase tracking-tighter leading-tight">¿Consumes suplementos?</span>
-                      <button onClick={() => setSuppStatus('taking')} className="bg-blue-100 text-blue-700 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">Sí, Activar</button>
+                      <button onClick={() => updateSupps({ status: 'taking' })} className="bg-blue-100 text-blue-700 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">Sí, Activar</button>
                     </div>
-                    <button onClick={() => setSuppStatus('suggest')} className="w-full bg-white border border-slate-200 text-slate-600 py-2.5 rounded-xl text-[10px] font-black uppercase hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 tracking-widest">
+                    <button onClick={() => updateSupps({ status: 'suggest' })} className="w-full bg-white border border-slate-200 text-slate-600 py-2.5 rounded-xl text-[10px] font-black uppercase hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 tracking-widest">
                       <Info className="w-4 h-4" /> Ver Sugerencias
                     </button>
                   </div>
                 )}
 
-                {suppStatus === 'taking' && (
+                {currentSupps.status === 'taking' && (
                   <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
                     <div className="space-y-3">
                       <label className="flex items-center gap-3 cursor-pointer">
-                        <input type="checkbox" checked={suppType.protein} onChange={e => setSuppType({...suppType, protein: e.target.checked})} className="w-6 h-6 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300"/>
+                        <input type="checkbox" checked={currentSupps.protein} onChange={e => updateSupps({protein: e.target.checked})} className="w-6 h-6 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300"/>
                         <span className="text-sm font-bold text-slate-700 uppercase tracking-tight">Proteína en Polvo (Whey)</span>
                       </label>
                       <label className="flex items-center gap-3 cursor-pointer">
-                        <input type="checkbox" checked={suppType.creatine} onChange={e => setSuppType({...suppType, creatine: e.target.checked})} className="w-6 h-6 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300"/>
+                        <input type="checkbox" checked={currentSupps.creatine} onChange={e => updateSupps({creatine: e.target.checked})} className="w-6 h-6 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300"/>
                         <span className="text-sm font-bold text-slate-700 uppercase tracking-tight">Creatina (5g Diarios)</span>
                       </label>
                     </div>
-                    <button onClick={() => setSuppStatus('none')} className="mt-4 text-[10px] text-indigo-600 font-black uppercase tracking-widest underline decoration-2">Guardar y Cerrar</button>
+                    <button onClick={handleSaveSupps} className="mt-4 text-[10px] text-indigo-600 font-black uppercase tracking-widest underline decoration-2">Guardar Selección</button>
                   </div>
                 )}
 
-                {suppStatus === 'suggest' && (
+                {currentSupps.status === 'saved' && (
+                  <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-200 flex justify-between items-center shadow-inner">
+                    <div>
+                      <p className="text-[10px] text-indigo-500 font-black uppercase tracking-widest mb-1 flex items-center gap-1"><CheckCircle2 className="w-3 h-3"/> Consumiendo</p>
+                      <p className="text-sm font-bold text-indigo-900 leading-tight">
+                        {currentSupps.protein && "Proteína Whey"}
+                        {currentSupps.protein && currentSupps.creatine && " + "}
+                        {currentSupps.creatine && "Creatina"}
+                      </p>
+                    </div>
+                    <button onClick={() => updateSupps({ status: 'taking' })} className="bg-white border border-indigo-200 text-indigo-700 px-3 py-2 rounded-xl text-[10px] font-black uppercase shadow-sm active:scale-95 transition-all">Editar</button>
+                  </div>
+                )}
+
+                {currentSupps.status === 'suggest' && (
                   <div className="bg-amber-50 p-4 rounded-xl border border-amber-100">
                     <ul className="text-xs text-amber-800 space-y-2 font-bold leading-relaxed mb-4">
                       <li>• <strong>Proteína:</strong> Si no llegas a tu meta diaria con comida.</li>
                       <li>• <strong>Creatina:</strong> Confiable para fuerza y recuperación.</li>
                     </ul>
                     <div className="flex gap-2">
-                      <button onClick={() => setSuppStatus('taking')} className="flex-1 bg-amber-200 text-amber-900 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95">Configurar</button>
-                      <button onClick={() => setSuppStatus('none')} className="flex-1 bg-white text-amber-700 border border-amber-200 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95">Ocultar</button>
+                      <button onClick={() => updateSupps({ status: 'taking' })} className="flex-1 bg-amber-200 text-amber-900 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95">Configurar</button>
+                      <button onClick={() => updateSupps({ status: 'none' })} className="flex-1 bg-white text-amber-700 border border-amber-200 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95">Ocultar</button>
                     </div>
                   </div>
                 )}
              </div>
 
-             <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+             <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 relative">
+                
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="font-bold text-lg flex items-center gap-2 text-slate-800">
                     <Apple className="w-5 h-5 text-red-500"/> Plan Base
@@ -728,11 +893,11 @@ export default function App() {
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-center">
                     <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-1">Calorías</p>
-                    <p className="text-xl font-bold text-slate-800">{currentProfile.nutrition.calories}</p>
+                    <p className="text-xl font-bold text-slate-800">{viewedProfileData.nutrition.calories}</p>
                   </div>
                   <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-center">
                     <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-1">Proteína</p>
-                    <p className="text-xl font-bold text-blue-600">{currentProfile.nutrition.protein}</p>
+                    <p className="text-xl font-bold text-blue-600">{viewedProfileData.nutrition.protein}</p>
                   </div>
                 </div>
 
@@ -747,7 +912,7 @@ export default function App() {
                 </div>
                 
                 <div className="space-y-4">
-                  {currentProfile.nutrition.meals.map((meal, mIdx) => {
+                  {viewedProfileData.nutrition.meals.map((meal, mIdx) => {
                     const selIdx = getSelectedMealOption(mIdx);
                     const safeIdx = selIdx < meal.options.length ? selIdx : 0;
                     return (
@@ -781,13 +946,14 @@ export default function App() {
         {activeTab === 'progreso' && (
           <div className="space-y-4 animate-in fade-in duration-300">
             
-            {/* AVANCE GLOBAL DE TODOS LOS PERFILES */}
             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
               <div className="p-6 bg-slate-50 border-b border-slate-200">
                 <h2 className="font-black text-xl text-slate-800 uppercase tracking-tighter flex items-center gap-2">
                   <Target className="w-6 h-6 text-indigo-600" /> Avance Global
                 </h2>
-                <p className="text-[10px] font-bold mt-1 uppercase tracking-widest text-slate-500">Sesiones completadas (Meta: {planTotalDias})</p>
+                <p className="text-[10px] font-bold mt-1 uppercase tracking-widest text-slate-500">
+                  En tiempo real (Meta: {planTotalDias})
+                </p>
               </div>
               <div className="p-5 space-y-5">
                 {Object.keys(profiles).map(profileName => {
@@ -802,7 +968,9 @@ export default function App() {
                   return (
                     <div key={profileName}>
                       <div className="flex justify-between items-end mb-1">
-                        <span className="text-sm font-bold text-slate-700 uppercase">{profileName}</span>
+                        <span className="text-sm font-bold text-slate-700 uppercase flex items-center gap-1">
+                          {profileName} {profileName === activeProfile && <span className="text-[8px] bg-slate-200 px-1.5 py-0.5 rounded-full">TÚ</span>}
+                        </span>
                         <span className="text-xs font-black text-slate-500">{completados}/{planTotalDias}</span>
                       </div>
                       <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden border border-slate-200">
@@ -814,7 +982,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* CALENDARIO CON NAVEGACIÓN Y BLOQUEO DE FUTURO */}
             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
               <div className="p-6 bg-slate-50 border-b border-slate-200 flex justify-between items-start">
                 <div>
@@ -855,7 +1022,6 @@ export default function App() {
                     
                     const isToday = viewDate.getFullYear() === actualDate.getFullYear() && viewDate.getMonth() === actualDate.getMonth() && dayNum === actualDate.getDate();
                     
-                    // Lógica para bloquear días futuros
                     const targetDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), dayNum);
                     targetDate.setHours(0,0,0,0);
                     const todayDateZero = new Date(actualDate);
