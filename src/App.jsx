@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Activity, Apple, CheckCircle2, AlertTriangle, Timer, Play, Pause, Users, HeartPulse, ChevronDown, Info, Beaker, LogOut, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Brain, Trophy, Star, Target, Search, ExternalLink, Cloud, ShieldAlert } from 'lucide-react';
+import { Activity, Apple, CheckCircle2, AlertTriangle, Timer, Play, Pause, Users, HeartPulse, ChevronDown, Info, Beaker, LogOut, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Brain, Trophy, Star, Target, Search, ExternalLink, Cloud, ShieldAlert, Lock } from 'lucide-react';
 
 // --- FIREBASE IMPORTS ---
 import { initializeApp } from 'firebase/app';
@@ -533,6 +533,18 @@ export default function App() {
     }
   };
 
+  // Funciones nuevas para el calendario corregido
+  const getDaysInViewMonth = () => new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
+  const getFirstDayOfMonth = () => new Date(viewDate.getFullYear(), viewDate.getMonth(), 1).getDay();
+  const getEmptyDaysCount = () => {
+    const firstDay = getFirstDayOfMonth();
+    return firstDay === 0 ? 6 : firstDay - 1; // 0 es Domingo. Si es domingo agregamos 6 vacíos. Si es lunes (1) agregamos 0.
+  };
+
+  const viewMonthName = viewDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase();
+  const actualDate = new Date();
+  const isCurrentMonth = viewDate.getFullYear() === actualDate.getFullYear() && viewDate.getMonth() === actualDate.getMonth();
+  
   if (isSyncing && !activeProfile) {
     return (
       <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 text-white font-sans">
@@ -573,6 +585,7 @@ export default function App() {
   const currentPlan = profiles[activeProfile].workoutPlan[activeDay] || profiles[activeProfile].workoutPlan[0];
   const viewedProfileData = profiles[viewedDietProfile] || profiles[activeProfile];
 
+  const planTotalDias = 20;
   const calculateTotalProgress = () => {
     let total = 0, done = 0;
     currentPlan.exercises.forEach((ex, exIdx) => {
@@ -582,15 +595,6 @@ export default function App() {
     });
     return total === 0 ? 0 : Math.round((done/total)*100);
   };
-
-  const getDaysInViewMonth = () => new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
-  const viewMonthName = viewDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase();
-  
-  const actualDate = new Date();
-  const isCurrentMonth = viewDate.getFullYear() === actualDate.getFullYear() && viewDate.getMonth() === actualDate.getMonth();
-  
-  const planTotalDias = 20;
-  const diasCompletadosPlan = Object.keys(calendarData).filter(k => k.endsWith(`-${activeProfile}`) && calendarData[k]).length;
   
   const currentExercise = currentPlan.exercises[activeExerciseIdx];
   const isTimeBased = currentExercise.reps.toLowerCase().includes('seg') || currentExercise.reps.toLowerCase().includes('min');
@@ -753,15 +757,23 @@ export default function App() {
                     <div className="flex flex-wrap gap-3">
                       {Array.from({length: numSets}).map((_, sIdx) => {
                         const key = `${activeProfile}-${activeDay}-${activeExerciseIdx}-${sIdx}`;
+                        const prevKey = `${activeProfile}-${activeDay}-${activeExerciseIdx}-${sIdx - 1}`;
+                        
                         const status = completedSets[key];
+                        // La serie está bloqueada si no es la primera Y la anterior no está marcada como completada
+                        const isLocked = sIdx > 0 && completedSets[prevKey] !== true;
+                        
                         const isDone = status === true;
                         const isHalfDone = status === 1;
                         const isWorking = activeWorkSet?.key === key;
                         
-                        const baseClasses = "h-14 flex items-center justify-center rounded-2xl border-2 font-black transition-all shadow-sm active:scale-95";
+                        const baseClasses = `h-14 flex items-center justify-center rounded-2xl border-2 font-black transition-all shadow-sm ${!isLocked ? 'active:scale-95' : ''}`;
                         
                         let statusClasses = "";
-                        if (isWorking) {
+                        if (isLocked) {
+                          const widthClass = isBilateralTimer ? 'w-20' : isTimeBased ? 'w-24' : 'w-14';
+                          statusClasses = `${widthClass} bg-slate-100 border-slate-200 text-slate-400 opacity-60 cursor-not-allowed`;
+                        } else if (isWorking) {
                           statusClasses = "w-28 bg-amber-500 border-amber-600 text-white animate-pulse";
                         } else if (isDone) {
                           statusClasses = "w-14 bg-green-500 border-green-600 text-white";
@@ -778,10 +790,13 @@ export default function App() {
                         return (
                           <button 
                             key={sIdx} 
+                            disabled={isLocked}
                             onClick={() => toggleSet(activeDay, activeExerciseIdx, sIdx, isTimeBased, finalTime, numSets, isBilateralTimer)} 
                             className={`${baseClasses} ${statusClasses}`}
                           >
-                            {isWorking ? (
+                            {isLocked ? (
+                              <Lock className="w-5 h-5 opacity-50" />
+                            ) : isWorking ? (
                               <span className="flex items-center gap-2"><Timer className="w-5 h-5"/> {timeLeft}s</span>
                             ) : isDone ? (
                               <CheckCircle2 className="w-7 h-7"/>
@@ -906,7 +921,7 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="flex bg-slate-100 rounded-lg overflow-hidden h-8 mb-5 border border-slate-200">
+                <div className="flex bg-slate-100 rounded-lg overflow-hidden h-8 mb-6 border border-slate-200">
                   <div className="w-2/3 bg-slate-800 text-[10px] text-white flex items-center justify-center font-bold uppercase tracking-widest">Ayuno (16h)</div>
                   <div className="w-1/3 bg-green-500 text-[10px] text-white flex items-center justify-center font-bold uppercase tracking-widest">Comida (8h)</div>
                 </div>
@@ -1012,9 +1027,17 @@ export default function App() {
               </div>
               <div className="p-5">
                 <div className="grid grid-cols-7 gap-2">
+                  {/* Encabezado de los días de la semana */}
                   {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((day, i) => (
-                    <div key={i} className="text-center text-[10px] font-black text-slate-400 uppercase">{day}</div>
+                    <div key={`header-${i}`} className="text-center text-[10px] font-black text-slate-400 uppercase">{day}</div>
                   ))}
+                  
+                  {/* Espacios vacíos para alinear el primer día del mes */}
+                  {Array.from({ length: getEmptyDaysCount() }).map((_, i) => (
+                    <div key={`empty-${i}`} className="aspect-square"></div>
+                  ))}
+
+                  {/* Días reales del mes */}
                   {Array.from({length: getDaysInViewMonth()}).map((_, i) => {
                     const dayNum = i + 1;
                     const dateStr = `${viewDate.getFullYear()}-${String(viewDate.getMonth() + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
@@ -1030,7 +1053,7 @@ export default function App() {
 
                     return (
                       <button 
-                        key={i}
+                        key={`day-${i}`}
                         onClick={() => {
                           if (!isFuture) toggleCalendarDay(dayNum);
                         }}
