@@ -56,6 +56,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('entrenamiento');
   const [activeDay, setActiveDay] = useState(0);
   const [activeExerciseIdx, setActiveExerciseIdx] = useState(0);
+  const [viewingCycle, setViewingCycle] = useState(0); // Nuevo estado para rastrear la semana/ciclo
   
   // Perfil seleccionado para ver en la pestaña de Nutrición (Andros puede cambiarlo)
   const [viewedDietProfile, setViewedDietProfile] = useState(null);
@@ -349,12 +350,14 @@ export default function App() {
     }
   }, [activeProfile]);
 
+  // Al cargar el perfil por primera vez, determinamos el día activo y la semana (ciclo) en la que va.
   useEffect(() => {
     if (activeProfile && !isSyncing && initializedProfileRef.current !== activeProfile) {
       const completedDays = Object.keys(calendarData).filter(k => k.endsWith(`-${activeProfile}`) && calendarData[k]).length;
       const totalPlanDays = profiles[activeProfile].workoutPlan.length;
       setActiveDay(completedDays % totalPlanDays);
       setActiveExerciseIdx(0);
+      setViewingCycle(Math.floor(completedDays / totalPlanDays));
       initializedProfileRef.current = activeProfile;
     }
   }, [activeProfile, calendarData, isSyncing, profiles]);
@@ -404,7 +407,7 @@ export default function App() {
   const checkAndTriggerExertion = (newSets, exIdx, totalSets) => {
     let currentExDone = true;
     for (let i = 0; i < totalSets; i++) {
-      if (newSets[`${activeProfile}-${activeDay}-${exIdx}-${i}`] !== true) {
+      if (newSets[`${activeProfile}-C${viewingCycle}-${activeDay}-${exIdx}-${i}`] !== true) {
         currentExDone = false; break;
       }
     }
@@ -414,7 +417,7 @@ export default function App() {
     currentPlan.exercises.forEach((ex, eIdx) => {
       const tSets = parseInt(ex.sets);
       for(let i = 0; i < tSets; i++) {
-        if(newSets[`${activeProfile}-${activeDay}-${eIdx}-${i}`] !== true) {
+        if(newSets[`${activeProfile}-C${viewingCycle}-${activeDay}-${eIdx}-${i}`] !== true) {
           dayComplete = false;
         }
       }
@@ -443,7 +446,7 @@ export default function App() {
   };
 
   const toggleSet = (dayIdx, exIdx, setIdx, isTimeBased, timeInSeconds, totalSets, isBilateralTimer) => {
-    const key = `${activeProfile}-${dayIdx}-${exIdx}-${setIdx}`;
+    const key = `${activeProfile}-C${viewingCycle}-${dayIdx}-${exIdx}-${setIdx}`;
     const status = completedSets[key];
 
     if (activeWorkSet?.key === key) {
@@ -533,7 +536,6 @@ export default function App() {
     }
   };
 
-  // Funciones nuevas para el calendario corregido
   const getDaysInViewMonth = () => new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
   const getFirstDayOfMonth = () => new Date(viewDate.getFullYear(), viewDate.getMonth(), 1).getDay();
   const getEmptyDaysCount = () => {
@@ -591,7 +593,7 @@ export default function App() {
     currentPlan.exercises.forEach((ex, exIdx) => {
       const s = parseInt(ex.sets);
       total += s;
-      for(let i=0; i<s; i++) if(completedSets[`${activeProfile}-${activeDay}-${exIdx}-${i}`] === true) done++;
+      for(let i=0; i<s; i++) if(completedSets[`${activeProfile}-C${viewingCycle}-${activeDay}-${exIdx}-${i}`] === true) done++;
     });
     return total === 0 ? 0 : Math.round((done/total)*100);
   };
@@ -702,7 +704,13 @@ export default function App() {
               {profiles[activeProfile].workoutPlan.map((d, i) => (
                 <button 
                   key={i} 
-                  onClick={() => { setActiveDay(i); setActiveExerciseIdx(0); }} 
+                  onClick={() => { 
+                    setActiveDay(i); 
+                    setActiveExerciseIdx(0); 
+                    const completedDays = Object.keys(calendarData).filter(k => k.endsWith(`-${activeProfile}`) && calendarData[k]).length;
+                    const totalPlanDays = profiles[activeProfile].workoutPlan.length;
+                    setViewingCycle(Math.floor(completedDays / totalPlanDays));
+                  }} 
                   className={`px-5 py-2 rounded-full text-sm font-bold transition-all shrink-0 border ${activeDay===i ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/40' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}>
                   {d.day}
                 </button>
@@ -756,8 +764,8 @@ export default function App() {
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Toca para completar</p>
                     <div className="flex flex-wrap gap-3">
                       {Array.from({length: numSets}).map((_, sIdx) => {
-                        const key = `${activeProfile}-${activeDay}-${activeExerciseIdx}-${sIdx}`;
-                        const prevKey = `${activeProfile}-${activeDay}-${activeExerciseIdx}-${sIdx - 1}`;
+                        const key = `${activeProfile}-C${viewingCycle}-${activeDay}-${activeExerciseIdx}-${sIdx}`;
+                        const prevKey = `${activeProfile}-C${viewingCycle}-${activeDay}-${activeExerciseIdx}-${sIdx - 1}`;
                         
                         const status = completedSets[key];
                         // La serie está bloqueada si no es la primera Y la anterior no está marcada como completada
