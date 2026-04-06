@@ -56,7 +56,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('entrenamiento');
   const [activeDay, setActiveDay] = useState(0);
   const [activeExerciseIdx, setActiveExerciseIdx] = useState(0);
-  const [viewingCycle, setViewingCycle] = useState(0); // Nuevo estado para rastrear la semana/ciclo
+  const [viewingCycle, setViewingCycle] = useState(0); 
   
   // Perfil seleccionado para ver en la pestaña de Nutrición (Andros puede cambiarlo)
   const [viewedDietProfile, setViewedDietProfile] = useState(null);
@@ -83,6 +83,13 @@ export default function App() {
   const [viewDate, setViewDate] = useState(new Date());
   
   const initializedProfileRef = useRef(null);
+
+  // --- REGRESAR ARRIBA AL CAMBIAR DE PESTAÑA ---
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo(0, 0);
+    }
+  }, [activeTab]);
 
   // --- LÓGICA DE SINCRONIZACIÓN GLOBAL ---
   useEffect(() => {
