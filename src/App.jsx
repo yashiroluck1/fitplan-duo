@@ -69,10 +69,8 @@ export default function App() {
   const [activeExerciseIdx, setActiveExerciseIdx] = useState(0);
   const [viewingCycle, setViewingCycle] = useState(0); 
   
-  // Perfil seleccionado para ver en la pestaña de Nutrición (Andros puede cambiarlo)
   const [viewedDietProfile, setViewedDietProfile] = useState(null);
 
-  // Estados Globales Sincronizados (Cargan el respaldo local primero)
   const localBackup = loadLocalBackup();
   const [completedSets, setCompletedSets] = useState(localBackup.completedSets || {}); 
   const [calendarData, setCalendarData] = useState(localBackup.calendarData || {});
@@ -96,14 +94,12 @@ export default function App() {
   
   const initializedProfileRef = useRef(null);
 
-  // --- REGRESAR ARRIBA AL CAMBIAR DE PESTAÑA ---
   useEffect(() => {
     if (typeof window !== 'undefined') {
       window.scrollTo(0, 0);
     }
   }, [activeTab]);
 
-  // --- LÓGICA DE SINCRONIZACIÓN GLOBAL ---
   useEffect(() => {
     if (!auth) {
       setIsSyncing(false);
@@ -117,7 +113,7 @@ export default function App() {
       } catch (e) {
         console.error("Error de autenticación Firebase:", e);
         setIsSyncing(false);
-        setDbError(true); // Mostrar icono de error si Firebase está caducado
+        setDbError(true);
       }
     };
     
@@ -142,7 +138,7 @@ export default function App() {
       setIsSyncing(false);
       setDbError(false);
     }, (err) => {
-      console.error("Error conectando a la base de datos (Firebase caducado):", err);
+      console.error("Error conectando a la base de datos:", err);
       setIsSyncing(false);
       setDbError(true);
     });
@@ -151,7 +147,6 @@ export default function App() {
   }, [user]);
 
   const updateGlobalState = async (updates) => {
-    // 1. PROTOCOLO DE GUARDADO LOCAL (Siempre se ejecuta primero)
     try {
       const currentBackup = loadLocalBackup();
       const newBackup = { ...currentBackup, ...updates };
@@ -160,7 +155,6 @@ export default function App() {
       console.error("Error en guardado local:", err);
     }
 
-    // 2. INTENTO DE GUARDADO EN NUBE
     if (!user || !db) return;
     try {
       const docRef = doc(db, 'appData', 'shared_state');
@@ -170,7 +164,6 @@ export default function App() {
       setDbError(true);
     }
   };
-  // ----------------------------------------
 
   const playBeep = () => {
     if (typeof window === 'undefined') return;
@@ -199,6 +192,7 @@ export default function App() {
     }
   };
 
+  // NUEVAS DIETAS: Ligeras, económicas, múltiples comidas al día, sin ayuno intermitente
   const rawProfiles = {
     Andros: {
       goal: 'Recomposición, cuidado de hernia discal.',
@@ -206,9 +200,10 @@ export default function App() {
       nutrition: {
         calories: '~2,000', protein: '160g',
         meals: [
-          { time: '12:00 PM', title: 'Romper Ayuno', options: [{ name: 'Opción 1: Huevos y Avena', items: [{scale: '200g Huevos', noScale: '4 Huevos enteros'}, {scale: '250g Avena', noScale: '1 Taza de avena'}, {scale: '100g Plátano', noScale: '1 Plátano'}] }, { name: 'Opción 2: Atún y Arroz', items: [{scale: '200g Atún', noScale: '2 Latas de atún'}, {scale: '150g Arroz', noScale: '1 Taza de arroz'}, {scale: '150g Manzana', noScale: '1 Manzana'}] }] },
-          { time: '4:00 PM', title: 'Comida Principal', options: [{ name: 'Opción 1: Pollo y Papa', items: [{scale: '200g Pollo', noScale: '1 Pechuga'}, {scale: '300g Papas', noScale: '2 Papas medianas'}, {scale: '100g Brócoli', noScale: '1 Taza brócoli'}] }, { name: 'Opción 2: Lentejas y Huevo', items: [{scale: '400g Lentejas', noScale: '2 Tazas lentejas'}, {scale: '150g Huevo', noScale: '3 Huevos duros'}, {scale: 'Ensalada', noScale: 'Ensalada libre'}] }] },
-          { time: '7:30 PM', title: 'Cierre de Ventana', options: [{ name: 'Opción 1: Pollo y Cacahuates', items: [{scale: '150g Pollo', noScale: '1 Pechuga mediana'}, {scale: 'Aceite oliva (15ml)', noScale: '1 Cda. aceite oliva'}, {scale: '30g Cacahuates', noScale: '1 Puñado cacahuates'}] }, { name: 'Opción 2: Huevos y Frijol', items: [{scale: '120g Claras + 50g Huevo', noScale: '4 Claras + 1 Huevo'}, {scale: '200g Frijoles', noScale: '1 Taza frijoles'}, {scale: 'Vegetales libres', noScale: 'Vegetales libres'}] }] }
+          { time: '8:00 AM', title: 'Desayuno', options: [{ name: 'Opción 1: Huevos y Avena', items: [{scale: '2 Huevos + 3 Claras', noScale: '5 piezas en total'}, {scale: '40g Avena', noScale: '1/2 Taza de avena hervida'}, {scale: '100g Plátano', noScale: '1 Plátano chico'}] }, { name: 'Opción 2: Huevos y Frijoles', items: [{scale: '3 Huevos revueltos', noScale: '3 Huevos'}, {scale: '100g Frijoles', noScale: '1/2 Taza de frijoles'}, {scale: '2 Tortillas de maíz', noScale: '2 Tortillas'}] }] },
+          { time: '12:00 PM', title: 'Colación', options: [{ name: 'Opción 1: Atún rápido', items: [{scale: '1 Lata de Atún (Agua)', noScale: '1 Lata'}, {scale: 'Paquete de galletas saladas', noScale: '1 Paquete chico (4-5 galletas)'}] }, { name: 'Opción 2: Fruta y Semillas', items: [{scale: '150g Manzana', noScale: '1 Manzana grande'}, {scale: '20g Cacahuates', noScale: '1 Puñito de cacahuates sin sal'}] }] },
+          { time: '3:30 PM', title: 'Comida', options: [{ name: 'Opción 1: Pollo y Arroz', items: [{scale: '150g Pollo (Pechuga)', noScale: '1 Pechuga mediana'}, {scale: '100g Arroz blanco/integral', noScale: '1/2 Taza arroz'}, {scale: 'Calabacitas/Zanahoria', noScale: 'Al gusto, hervidas'}] }, { name: 'Opción 2: Lentejas y Huevo', items: [{scale: '200g Lentejas cocidas', noScale: '1 Taza grande de lentejas'}, {scale: '2 Huevos duros', noScale: '2 Huevos picados'}, {scale: '2 Tortillas de maíz', noScale: '2 Tortillas'}] }] },
+          { time: '8:00 PM', title: 'Cena Ligera', options: [{ name: 'Opción 1: Tostadas de Pollo', items: [{scale: '100g Pollo deshebrado', noScale: 'Sobras de la comida'}, {scale: '3 Tostadas horneadas', noScale: '3 Tostadas sin freír'}, {scale: 'Lechuga y salsa', noScale: 'Al gusto'}] }, { name: 'Opción 2: Omelet Ligero', items: [{scale: '1 Huevo + 3 Claras', noScale: '4 piezas'}, {scale: 'Espinacas o Champiñones', noScale: '1 Puñado'}, {scale: '1 Rebanada de pan integral', noScale: '1 Pan tostado'}] }] }
         ]
       },
       workoutPlan: [
@@ -247,9 +242,10 @@ export default function App() {
       nutrition: {
         calories: '~1,450', protein: '110g',
         meals: [
-          { time: '12:00 PM', title: 'Romper Ayuno', options: [{ name: 'Opción 1: Huevos y Tortilla', items: [{scale: '100g Huevo + 60g Claras', noScale: '2 Huevos + 2 Claras'}, {scale: '60g Tortillas', noScale: '2 Tortillas maíz'}, {scale: '100g Manzana', noScale: '1 Manzana chica'}] }, { name: 'Opción 2: Avena Proteica', items: [{scale: '40g Avena seca', noScale: '1/2 Taza avena'}, {scale: '100g Atún', noScale: '1 Lata atún'}, {scale: '15g Cacahuates', noScale: '1 Cda. cacahuates'}] }] },
-          { time: '4:00 PM', title: 'Comida Principal', options: [{ name: 'Opción 1: Pollo y Arroz', items: [{scale: '120g Pollo', noScale: '1 Pechuga chica'}, {scale: '80g Arroz', noScale: '1/2 Taza arroz'}, {scale: 'Vegetales al vapor', noScale: 'Abundante brócoli'}] }, { name: 'Opción 2: Frijol y Huevo', items: [{scale: '300g Frijol', noScale: '1.5 Tazas frijol'}, {scale: '100g Huevo', noScale: '2 Huevos duros'}, {scale: 'Zanahorias', noScale: 'Zanahoria libre'}] }] },
-          { time: '7:30 PM', title: 'Cierre de Ventana', options: [{ name: 'Opción 1: Atún y Ensalada', items: [{scale: '100g Atún', noScale: '1 Lata atún'}, {scale: 'Aceite oliva (7ml)', noScale: '1/2 Cda. aceite oliva'}] }, { name: 'Opción 2: Pollo Ligero', items: [{scale: '100g Pechuga', noScale: '1/2 Pechuga'}, {scale: 'Ensalada verde', noScale: 'Ensalada libre'}] }] }
+          { time: '8:30 AM', title: 'Desayuno', options: [{ name: 'Opción 1: Huevos a la mexicana', items: [{scale: '1 Huevo + 2 Claras', noScale: '3 piezas'}, {scale: 'Tomate, cebolla, chile', noScale: 'Picado al gusto'}, {scale: '1 Tortilla de maíz', noScale: '1 pieza'}] }, { name: 'Opción 2: Avena Cocida', items: [{scale: '30g Avena seca', noScale: '1/3 Taza avena'}, {scale: 'Media manzana picada', noScale: '1/2 Manzana'}, {scale: 'Agua y Canela', noScale: 'Hervir todo junto'}] }] },
+          { time: '12:30 PM', title: 'Colación', options: [{ name: 'Opción 1: Gelatina y Almendras', items: [{scale: 'Gelatina Light', noScale: '1 Porción libre'}, {scale: '10 Almendras', noScale: '1 Puñito pequeño'}] }, { name: 'Opción 2: Verdura Fresca', items: [{scale: 'Pepino y Jícama', noScale: '1 Taza grande'}, {scale: 'Limón y Tajín/Sal', noScale: 'Al gusto'}] }] },
+          { time: '3:30 PM', title: 'Comida', options: [{ name: 'Opción 1: Salpicón de Atún', items: [{scale: '1 Lata Atún (Agua)', noScale: '1 Lata drenada'}, {scale: 'Lechuga, tomate, cebolla', noScale: 'Verdura picada abundante'}, {scale: '2 Tostadas horneadas', noScale: '2 piezas'}] }, { name: 'Opción 2: Pollo en Salsa', items: [{scale: '120g Pechuga de Pollo', noScale: '1 Pechuga chica'}, {scale: 'Nopales cocidos', noScale: '1 Taza de nopales'}, {scale: 'Salsa verde al gusto', noScale: 'Libre'}] }] },
+          { time: '8:00 PM', title: 'Cena Ligera', options: [{ name: 'Opción 1: Ensalada de Claras', items: [{scale: '3 Claras cocidas', noScale: 'Picadas en cuadros'}, {scale: 'Cama de lechuga/espinaca', noScale: 'Abundante'}, {scale: 'Vinagreta simple (limón)', noScale: '1 cdta. aceite de oliva'}] }, { name: 'Opción 2: Queso Asado', items: [{scale: '60g Queso Panela', noScale: '2 rebanadas gruesas'}, {scale: 'Calabacitas asadas', noScale: '1 Taza'}] }] }
         ]
       },
       workoutPlan: [
@@ -287,9 +283,10 @@ export default function App() {
       nutrition: {
         calories: '~1,900', protein: '140g',
         meals: [
-          { time: '12:00 PM', title: 'Romper Ayuno', options: [{ name: 'Opción 1: Huevos y Plátano (Potasio)', items: [{scale: '200g Huevos', noScale: '4 Huevos enteros'}, {scale: '150g Plátano', noScale: '1.5 Plátanos'}, {scale: '30g Avena', noScale: '1/3 Taza avena'}] }, { name: 'Opción 2: Batido y Tostadas', items: [{scale: '1 Scoop Proteína', noScale: '1 Scoop'}, {scale: '2 Panes integrales', noScale: '2 Rebanadas'}, {scale: '15g Crema cacahuate', noScale: '1 Cda. crema'}] }] },
-          { time: '4:00 PM', title: 'Comida Principal', options: [{ name: 'Opción 1: Pollo, Frijol y Arroz', items: [{scale: '180g Pollo', noScale: '1 Pechuga'}, {scale: '150g Frijol (Magnesio)', noScale: '1 Taza frijol'}, {scale: '100g Arroz', noScale: '1/2 Taza arroz'}] }, { name: 'Opción 2: Carne magra y Papa', items: [{scale: '150g Res magra', noScale: '1 Bistec grande'}, {scale: '250g Papa cocida', noScale: '2 Papas chicas'}, {scale: 'Espinacas', noScale: 'Abundante espinaca'}] }] },
-          { time: '7:30 PM', title: 'Cierre de Ventana', options: [{ name: 'Opción 1: Atún y Espinaca', items: [{scale: '150g Atún', noScale: '1.5 Latas atún'}, {scale: 'Ensalada espinaca', noScale: 'Ensalada libre'}, {scale: '15g Almendras', noScale: '1 Puñito almendras'}] }, { name: 'Opción 2: Claras y Aguacate', items: [{scale: '200g Claras', noScale: '6 Claras'}, {scale: '50g Aguacate', noScale: '1/4 Aguacate'}] }] }
+          { time: '8:00 AM', title: 'Desayuno', options: [{ name: 'Opción 1: Avena y Plátano', items: [{scale: '40g Avena cocida en agua/leche', noScale: '1/2 Taza de avena'}, {scale: '1 Plátano (Potasio)', noScale: '1 pieza'}, {scale: '2 Huevos duros (aparte)', noScale: 'Para la proteína'}] }, { name: 'Opción 2: Huevos con Espinaca', items: [{scale: '3 Huevos enteros', noScale: '3 Huevos'}, {scale: 'Abundante espinaca', noScale: 'Para el potasio'}, {scale: '2 Tortillas de maíz', noScale: '2 piezas'}] }] },
+          { time: '12:00 PM', title: 'Colación', options: [{ name: 'Opción 1: Atún directo', items: [{scale: '1 Lata de Atún en agua', noScale: '1 Lata'}, {scale: 'Limón y salsa', noScale: 'Al gusto'}] }, { name: 'Opción 2: Fruta y Crema de maní', items: [{scale: '1 Manzana', noScale: 'Cortada en gajos'}, {scale: '1 Cucharada Crema de cacahuate', noScale: '1 Cda. sobre la manzana'}] }] },
+          { time: '3:30 PM', title: 'Comida', options: [{ name: 'Opción 1: Pollo y Frijoles', items: [{scale: '150g Pollo asado', noScale: '1 Pechuga'}, {scale: '1 Taza Frijoles de olla (Magnesio)', noScale: '1 Taza'}, {scale: 'Ensalada fresca', noScale: 'Libre'}] }, { name: 'Opción 2: Soya o Res Molida', items: [{scale: '150g Carne magra o Soya', noScale: 'Picadillo'}, {scale: 'Zanahoria y papa picada', noScale: '1 Taza combinada'}] }] },
+          { time: '8:00 PM', title: 'Cena Ligera', options: [{ name: 'Opción 1: Tostadas de Atún', items: [{scale: '1 Lata de atún', noScale: '1 Lata'}, {scale: 'Pico de gallo', noScale: 'Al gusto'}, {scale: '3 Tostadas horneadas', noScale: '3 piezas'}] }, { name: 'Opción 2: Omelet', items: [{scale: '1 Huevo + 3 Claras', noScale: 'Batidos'}, {scale: 'Champiñones y cebolla', noScale: '1 Puñado asado'}] }] }
         ]
       },
       workoutPlan: [
@@ -328,9 +325,10 @@ export default function App() {
       nutrition: {
         calories: '~1,400', protein: '100g',
         meals: [
-          { time: '12:00 PM', title: 'Romper Ayuno', options: [{ name: 'Opción 1: Huevos y Avena', items: [{scale: '100g Huevos (2)', noScale: '2 Huevos enteros'}, {scale: '30g Avena', noScale: '1/3 Taza avena'}, {scale: '100g Fruta', noScale: '1 Manzana/Plátano'}] }, { name: 'Opción 2: Tostadas con Huevo', items: [{scale: '2 Rebanadas pan', noScale: '2 Panes integrales'}, {scale: '100g Huevos', noScale: '2 Huevos'}, {scale: 'Verduras', noScale: 'Al gusto'}] }] },
-          { time: '4:00 PM', title: 'Comida Principal', options: [{ name: 'Opción 1: Pollo y Arroz', items: [{scale: '120g Pechuga', noScale: '1 Pechuga chica'}, {scale: '80g Arroz', noScale: '1/2 Taza arroz'}, {scale: 'Verduras verdes', noScale: 'Libre'}] }, { name: 'Opción 2: Atún y Pasta', items: [{scale: '1 Lata Atún', noScale: '1 Lata'}, {scale: '80g Pasta cocida', noScale: '1 Taza pasta'}, {scale: 'Zanahoria/Brócoli', noScale: 'Libre'}] }] },
-          { time: '7:30 PM', title: 'Cierre de Ventana', options: [{ name: 'Opción 1: Ensalada Ligera', items: [{scale: '80g Pollo/Atún', noScale: 'Porción pequeña'}, {scale: 'Ensalada mixta', noScale: 'Libre'}, {scale: '10g Nueces', noScale: 'Mitad de puñado'}] }, { name: 'Opción 2: Claras de huevo', items: [{scale: '150g Claras', noScale: '5 Claras'}, {scale: 'Tomate/Cebolla', noScale: 'Al gusto'}] }] }
+          { time: '8:30 AM', title: 'Desayuno', options: [{ name: 'Opción 1: Huevos s/aceite', items: [{scale: '2 Huevos estrellados (sartén teflón)', noScale: '2 Huevos'}, {scale: 'Salsa casera', noScale: 'Al gusto'}, {scale: '1 Tortilla de maíz', noScale: '1 pieza'}] }, { name: 'Opción 2: Tostadas de Aguacate', items: [{scale: '2 Tostadas horneadas o Pan integral', noScale: '2 piezas'}, {scale: '1/3 Aguacate untado', noScale: 'En lugar de mayo'}, {scale: '1 Huevo cocido rebanado', noScale: '1 Huevo'}] }] },
+          { time: '12:30 PM', title: 'Colación', options: [{ name: 'Opción 1: Fruta fresca', items: [{scale: 'Papaya o Melón picado', noScale: '1 Taza generosa'}] }, { name: 'Opción 2: Cacahuates', items: [{scale: 'Cacahuates tostados (sin sal)', noScale: '1 Puñito pequeño'}] }] },
+          { time: '3:30 PM', title: 'Comida', options: [{ name: 'Opción 1: Ensalada de Pollo', items: [{scale: '100g Pollo deshebrado', noScale: 'Medio puño de pollo'}, {scale: 'Lechuga, zanahoria, repollo', noScale: 'Base grande de ensalada'}, {scale: 'Jugo de limón y sal', noScale: 'Como aderezo'}] }, { name: 'Opción 2: Tazón de Lentejas', items: [{scale: '1.5 Tazas Lentejas (caldito)', noScale: '1 Plato mediano'}, {scale: '1 Huevo duro picado', noScale: '1 Huevo dentro del caldo'}] }] },
+          { time: '8:00 PM', title: 'Cena Ligera', options: [{ name: 'Opción 1: Atún y Verduras', items: [{scale: 'Media Lata de Atún', noScale: '1/2 Lata'}, {scale: 'Chayote o Brócoli hervido', noScale: '1 Taza'}] }, { name: 'Opción 2: Claras revueltas', items: [{scale: '4 Claras de huevo', noScale: '4 Claras'}, {scale: 'Ejotes o Espinacas', noScale: 'Hervidos y revueltos'}] }] }
         ]
       },
       workoutPlan: [
@@ -364,11 +362,11 @@ export default function App() {
     }
   };
 
-  // Inyectar la opción de Batido si el perfil activo o el visualizado tiene Proteína activada en Firebase localmente
   const profiles = JSON.parse(JSON.stringify(rawProfiles));
   Object.keys(profiles).forEach(p => {
     const pSupps = suppData[p] || { status: 'none', protein: false, creatine: false };
     if (pSupps.protein) {
+      // Modificamos para agregar la opción en la comida 2 (Colación) en lugar de la anterior
       profiles[p].nutrition.meals[1].options.push({
         name: 'Opción 3 (Rápida): Batido',
         items: [{scale: '30g Proteína (1 scoop)', noScale: '1 Scoop'}, {scale: '100g Plátano', noScale: '1 Plátano'}, {scale: '15g Maní', noScale: '1 Cda. maní'}]
@@ -382,7 +380,6 @@ export default function App() {
     }
   }, [activeProfile]);
 
-  // Al cargar el perfil por primera vez, determinamos el día activo y la semana (ciclo) en la que va.
   useEffect(() => {
     if (activeProfile && !isSyncing && initializedProfileRef.current !== activeProfile) {
       const completedDays = Object.keys(calendarData).filter(k => k.endsWith(`-${activeProfile}`) && calendarData[k]).length;
@@ -811,7 +808,6 @@ export default function App() {
                         const prevKey = `${activeProfile}-C${viewingCycle}-${activeDay}-${activeExerciseIdx}-${sIdx - 1}`;
                         
                         const status = completedSets[key];
-                        // La serie está bloqueada si no es la primera Y la anterior no está marcada como completada
                         const isLocked = sIdx > 0 && completedSets[prevKey] !== true;
                         
                         const isDone = status === true;
@@ -875,7 +871,6 @@ export default function App() {
         {activeTab === 'nutricion' && (
           <div className="space-y-4 animate-in fade-in duration-300">
              
-             {/* Admin selector: Solo Andros puede elegir de quién ver y modificar la dieta */}
              {activeProfile === 'Andros' && (
                <div className="bg-slate-900 p-2 rounded-2xl flex gap-2 overflow-x-auto scrollbar-hide border border-slate-700 shadow-md">
                  <div className="flex items-center px-3 border-r border-slate-700">
@@ -957,24 +952,19 @@ export default function App() {
                 
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="font-bold text-lg flex items-center gap-2 text-slate-800">
-                    <Apple className="w-5 h-5 text-red-500"/> Plan Base
+                    <Apple className="w-5 h-5 text-red-500"/> Menú del Día
                   </h2>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-2 gap-4 mb-6">
                   <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-center">
-                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-1">Calorías</p>
+                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-1">Calorías Aprox.</p>
                     <p className="text-xl font-bold text-slate-800">{viewedProfileData.nutrition.calories}</p>
                   </div>
                   <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-center">
-                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-1">Proteína</p>
+                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-1">Proteína Base</p>
                     <p className="text-xl font-bold text-blue-600">{viewedProfileData.nutrition.protein}</p>
                   </div>
-                </div>
-
-                <div className="flex bg-slate-100 rounded-lg overflow-hidden h-8 mb-6 border border-slate-200">
-                  <div className="w-2/3 bg-slate-800 text-[10px] text-white flex items-center justify-center font-bold uppercase tracking-widest">Ayuno (16h)</div>
-                  <div className="w-1/3 bg-green-500 text-[10px] text-white flex items-center justify-center font-bold uppercase tracking-widest">Comida (8h)</div>
                 </div>
                 
                 <div className="space-y-4">
