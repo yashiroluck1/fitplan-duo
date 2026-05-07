@@ -1,3 +1,4 @@
+```react
 import React, { useState, useEffect, useRef } from 'react';
 import { Activity, Apple, CheckCircle2, AlertTriangle, Timer, Play, Pause, Users, HeartPulse, ChevronDown, Info, Beaker, LogOut, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Brain, Trophy, Star, Target, Search, ExternalLink, Cloud, ShieldAlert, Lock, DatabaseBackup } from 'lucide-react';
 
@@ -593,10 +594,21 @@ export default function App() {
       <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 text-white font-sans">
         <HeartPulse className="w-16 h-16 text-red-500 mb-6 animate-pulse" />
         <h1 className="text-4xl font-black mb-2">FitPlan Duo</h1>
-        <p className="text-slate-400 mb-10 tracking-widest uppercase text-sm font-bold flex items-center gap-2">
-          {dbError ? <><DatabaseBackup className="w-4 h-4 text-amber-500" /> Modo Offline</> : <Cloud className="w-4 h-4 text-green-500" />}
-          Selecciona tu perfil
-        </p>
+        
+        <div className="flex flex-col items-center gap-3 mb-10">
+          {dbError ? (
+            <span className="flex items-center gap-1.5 bg-amber-500/10 text-amber-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-amber-500/20">
+              <DatabaseBackup className="w-3 h-3" /> Modo Offline
+            </span>
+          ) : (
+            <span className="flex items-center gap-1.5 bg-green-500/10 text-green-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-green-500/20">
+              <Cloud className="w-3 h-3" /> Conectado
+            </span>
+          )}
+          <p className="text-slate-400 tracking-widest uppercase text-sm font-bold mt-2">
+            Selecciona tu perfil
+          </p>
+        </div>
         
         <div className="w-full max-w-sm grid grid-cols-1 gap-4">
           <button onClick={() => setActiveProfile('Andros')} className="w-full bg-blue-600 hover:bg-blue-700 text-white p-5 rounded-3xl font-black text-xl flex justify-between items-center transition-all active:scale-95 shadow-lg shadow-blue-900/50">
