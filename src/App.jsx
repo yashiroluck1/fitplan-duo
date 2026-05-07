@@ -1,5 +1,6 @@
+```react
 import React, { useState, useEffect, useRef } from 'react';
-import { Activity, Apple, CheckCircle2, AlertTriangle, Timer, Play, Pause, Users, HeartPulse, ChevronDown, Info, Beaker, LogOut, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Brain, Trophy, Star, Target, Search, ExternalLink, Cloud, ShieldAlert, Lock } from 'lucide-react';
+import { Activity, Apple, CheckCircle2, AlertTriangle, Timer, Play, Pause, Users, HeartPulse, ChevronDown, Info, Beaker, LogOut, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Brain, Trophy, Star, Target, Search, ExternalLink, Cloud, ShieldAlert, Lock, DatabaseBackup } from 'lucide-react';
 
 // --- FIREBASE IMPORTS ---
 import { initializeApp } from 'firebase/app';
@@ -51,6 +52,17 @@ const motivaciones = [
   "Has vencido la resistencia inicial de tu cerebro. ¡Estás en estado de flujo, sigue así!"
 ];
 
+// Función para leer el respaldo local
+const loadLocalBackup = () => {
+  if (typeof window !== 'undefined') {
+    try {
+      const local = window.localStorage.getItem('fp-offline-data');
+      if (local) return JSON.parse(local);
+    } catch (e) { console.error("Error leyendo backup local", e); }
+  }
+  return { completedSets: {}, calendarData: {}, mealSelections: {}, suppData: {} };
+};
+
 export default function App() {
   const [activeProfile, setActiveProfile] = useLocalStorage('fp-profile', null);
   const [activeTab, setActiveTab] = useState('entrenamiento');
@@ -61,11 +73,12 @@ export default function App() {
   // Perfil seleccionado para ver en la pestaña de Nutrición (Andros puede cambiarlo)
   const [viewedDietProfile, setViewedDietProfile] = useState(null);
 
-  // Estados Globales Sincronizados (se guardan en la nube)
-  const [completedSets, setCompletedSets] = useState({}); 
-  const [calendarData, setCalendarData] = useState({});
-  const [mealSelections, setMealSelections] = useState({});
-  const [suppData, setSuppData] = useState({}); 
+  // Estados Globales Sincronizados (Cargan el respaldo local primero)
+  const localBackup = loadLocalBackup();
+  const [completedSets, setCompletedSets] = useState(localBackup.completedSets || {}); 
+  const [calendarData, setCalendarData] = useState(localBackup.calendarData || {});
+  const [mealSelections, setMealSelections] = useState(localBackup.mealSelections || {});
+  const [suppData, setSuppData] = useState(localBackup.suppData || {}); 
 
   const [user, setUser] = useState(null);
   const [isSyncing, setIsSyncing] = useState(true);
@@ -95,6 +108,7 @@ export default function App() {
   useEffect(() => {
     if (!auth) {
       setIsSyncing(false);
+      setDbError(true);
       return;
     }
 
@@ -102,8 +116,9 @@ export default function App() {
       try {
         await signInAnonymously(auth);
       } catch (e) {
-        console.error("Error de autenticación:", e);
+        console.error("Error de autenticación Firebase:", e);
         setIsSyncing(false);
+        setDbError(true); // Mostrar icono de error si Firebase está caducado
       }
     };
     
@@ -128,7 +143,7 @@ export default function App() {
       setIsSyncing(false);
       setDbError(false);
     }, (err) => {
-      console.error("Error escuchando la base de datos:", err);
+      console.error("Error conectando a la base de datos (Firebase caducado):", err);
       setIsSyncing(false);
       setDbError(true);
     });
@@ -137,12 +152,23 @@ export default function App() {
   }, [user]);
 
   const updateGlobalState = async (updates) => {
+    // 1. PROTOCOLO DE GUARDADO LOCAL (Siempre se ejecuta primero)
+    try {
+      const currentBackup = loadLocalBackup();
+      const newBackup = { ...currentBackup, ...updates };
+      window.localStorage.setItem('fp-offline-data', JSON.stringify(newBackup));
+    } catch (err) {
+      console.error("Error en guardado local:", err);
+    }
+
+    // 2. INTENTO DE GUARDADO EN NUBE
     if (!user || !db) return;
     try {
       const docRef = doc(db, 'appData', 'shared_state');
       await setDoc(docRef, updates, { merge: true });
     } catch (err) {
-      console.error("Error al guardar en la nube:", err);
+      console.error("Falló Firebase. Datos guardados solo en el dispositivo.", err);
+      setDbError(true);
     }
   };
   // ----------------------------------------
@@ -339,7 +365,7 @@ export default function App() {
     }
   };
 
-  // Inyectar la opción de Batido si el perfil activo o el visualizado tiene Proteína activada en Firebase
+  // Inyectar la opción de Batido si el perfil activo o el visualizado tiene Proteína activada en Firebase localmente
   const profiles = JSON.parse(JSON.stringify(rawProfiles));
   Object.keys(profiles).forEach(p => {
     const pSupps = suppData[p] || { status: 'none', protein: false, creatine: false };
@@ -547,7 +573,7 @@ export default function App() {
   const getFirstDayOfMonth = () => new Date(viewDate.getFullYear(), viewDate.getMonth(), 1).getDay();
   const getEmptyDaysCount = () => {
     const firstDay = getFirstDayOfMonth();
-    return firstDay === 0 ? 6 : firstDay - 1; // 0 es Domingo. Si es domingo agregamos 6 vacíos. Si es lunes (1) agregamos 0.
+    return firstDay === 0 ? 6 : firstDay - 1; 
   };
 
   const viewMonthName = viewDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase();
@@ -558,7 +584,7 @@ export default function App() {
     return (
       <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 text-white font-sans">
         <Activity className="w-12 h-12 text-blue-500 mb-6 animate-spin" />
-        <h1 className="text-xl font-black mb-2 animate-pulse">Sincronizando Avances...</h1>
+        <h1 className="text-xl font-black mb-2 animate-pulse">Cargando Respaldo...</h1>
       </div>
     );
   }
@@ -569,7 +595,7 @@ export default function App() {
         <HeartPulse className="w-16 h-16 text-red-500 mb-6 animate-pulse" />
         <h1 className="text-4xl font-black mb-2">FitPlan Duo</h1>
         <p className="text-slate-400 mb-10 tracking-widest uppercase text-sm font-bold flex items-center gap-2">
-          {dbError ? <AlertTriangle className="w-4 h-4 text-red-500" /> : <Cloud className="w-4 h-4 text-green-500" />}
+          {dbError ? <><DatabaseBackup className="w-4 h-4 text-amber-500" /> Modo Offline</> : <Cloud className="w-4 h-4 text-green-500" />}
           Selecciona tu perfil
         </p>
         
@@ -685,7 +711,7 @@ export default function App() {
             </h1>
             <p className="text-slate-400 text-[10px] mt-0.5 uppercase font-bold tracking-widest flex items-center gap-1.5">
               {activeProfile}: {profiles[activeProfile].goal}
-              {isSyncing ? <Activity className="w-3 h-3 text-amber-400 animate-spin" /> : <Cloud className="w-3 h-3 text-green-400" />}
+              {dbError ? <DatabaseBackup className="w-3 h-3 text-amber-400" /> : <Cloud className="w-3 h-3 text-green-400" />}
             </p>
           </div>
           <button onClick={() => { setActiveProfile(null); initializedProfileRef.current = null; }} className="bg-slate-800 border border-slate-700 p-2.5 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-red-900/50 hover:border-red-800 hover:text-red-400 transition-colors">
@@ -1140,3 +1166,6 @@ export default function App() {
     </div>
   );
 }
+
+
+```
