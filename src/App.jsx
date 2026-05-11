@@ -192,7 +192,6 @@ export default function App() {
     }
   };
 
-  // NUEVAS DIETAS: Ligeras, económicas, múltiples comidas al día, sin ayuno intermitente
   const rawProfiles = {
     Andros: {
       goal: 'Recomposición, cuidado de hernia discal.',
@@ -207,31 +206,21 @@ export default function App() {
         ]
       },
       workoutPlan: [
-        { day: 'Día 1', title: 'Tren Superior (Empuje)', exercises: [
+        { day: 'Día 1', title: 'Tren Superior', exercises: [
           { name: 'Flexiones de pecho', sets: '3', reps: '8-15', note: 'Apoya rodillas si es necesario.' },
           { name: 'Pike Push-ups', sets: '3', reps: '8-12', note: 'Foco en hombros.' },
-          { name: 'Fondos para tríceps', sets: '3', reps: '10-15', note: 'Espalda cerca de la silla.' },
-          { name: 'Plancha frontal', sets: '3', reps: '30 seg', note: 'Aprieta glúteos y abdomen.' }
+          { name: 'Back Widows', sets: '4', reps: '10-15', note: 'Codos empujan el suelo.' },
+          { name: 'Remo invertido', sets: '3', reps: '10', note: 'Usa mesa firme o sábanas.' }
         ]},
         { day: 'Día 2', title: 'Tren Inferior', exercises: [
           { name: 'Sentadillas', sets: '3', reps: '12-15', note: 'Torso erguido.' },
           { name: 'Zancadas hacia atrás', sets: '3', reps: '10 x pierna', note: 'Menos tensión en rodillas.' },
-          { name: 'Puente de glúteo', sets: '4', reps: '15', note: 'Seguro para la hernia.' },
-          { name: 'Elevación de talones', sets: '4', reps: '20', note: 'Sobre puntas.' }
+          { name: 'Puente de glúteo', sets: '4', reps: '15', note: 'Seguro para la hernia.' }
         ]},
-        { day: 'Día 3', title: 'Estabilidad Core (McGill)', exercises: [
+        { day: 'Día 3', title: 'Core y Estabilidad', exercises: [
           { name: 'Bird-Dog', sets: '3', reps: '6 x lado', note: 'Pausa de 3 seg arriba.' },
           { name: 'Plancha lateral', sets: '3', reps: '20 seg x lado', note: 'Apoya rodillas si necesitas.' },
-          { name: 'Curl-up McGill', sets: '3', reps: '8', note: 'Manos bajo zona lumbar.' }
-        ]},
-        { day: 'Día 4', title: 'Tren Superior (Tracción)', exercises: [
-          { name: 'Back Widows', sets: '4', reps: '10-15', note: 'Codos empujan el suelo.' },
-          { name: 'Remo invertido / Deslizamiento', sets: '3', reps: '10', note: 'Tira con la espalda.' },
-          { name: 'Superman holds', sets: '3', reps: '15 seg', note: 'Eleva pecho suavemente.' }
-        ]},
-        { day: 'Día 5', title: 'Tren Inferior y Core', exercises: [
-          { name: 'Sentadilla Búlgara', sets: '3', reps: '8-12 x pierna', note: 'Pie trasero en silla.' },
-          { name: 'Step-ups', sets: '3', reps: '10 x pierna', note: 'Sube a silla firme.' },
+          { name: 'Curl-up McGill', sets: '3', reps: '8', note: 'Manos bajo zona lumbar.' },
           { name: 'Wall Sit', sets: '3', reps: '45 seg', note: 'Espalda en pared.' }
         ]}
       ]
@@ -249,31 +238,21 @@ export default function App() {
         ]
       },
       workoutPlan: [
-        { day: 'Día 1', title: 'Glúteos y Core', exercises: [
+        { day: 'Día 1', title: 'Glúteos y Pierna', exercises: [
           { name: 'Puente de glúteo', sets: '4', reps: '15-20', note: 'Aprieta 2 seg arriba.' },
           { name: 'Frog Pumps', sets: '3', reps: '20', note: 'Suelas juntas.' },
-          { name: 'Elevación lateral', sets: '3', reps: '15 x pierna', note: 'Acostada de lado.' },
-          { name: 'Plancha (Plank)', sets: '3', reps: '30 seg', note: 'Abdomen apretado.' }
+          { name: 'Peso Muerto Rumano', sets: '3', reps: '15', note: 'Rodillas casi estiradas.' }
         ]},
-        { day: 'Día 2', title: 'Tren Superior', exercises: [
+        { day: 'Día 2', title: 'Tren Superior y Core', exercises: [
           { name: 'Flexiones rodillas', sets: '3', reps: '10-15', note: 'Cojín bajo rodillas.' },
           { name: 'Back Widows', sets: '3', reps: '12', note: 'Empuja con codos.' },
-          { name: 'Fondos tríceps', sets: '3', reps: '12', note: 'Espalda cerca silla.' }
+          { name: 'Plancha (Plank)', sets: '3', reps: '30 seg', note: 'Abdomen apretado.' },
+          { name: 'Flutter Kicks', sets: '3', reps: '30 seg', note: 'Manos bajo glúteos.' }
         ]},
-        { day: 'Día 3', title: 'Glúteo Aislado', exercises: [
+        { day: 'Día 3', title: 'Aislado Glúteo y Cadera', exercises: [
           { name: 'Puente una pierna', sets: '3', reps: '12 x pierna', note: 'Empuja con talón.' },
           { name: 'Clamshells', sets: '3', reps: '15 x pierna', note: 'De lado.' },
-          { name: 'Toques de talón', sets: '3', reps: '20 x lado', note: 'Boca arriba.' }
-        ]},
-        { day: 'Día 4', title: 'Core y Brazos', exercises: [
-          { name: 'Flutter Kicks', sets: '3', reps: '30 seg', note: 'Manos bajo glúteos.' },
-          { name: 'Plancha lateral', sets: '3', reps: '20 seg x lado', note: 'Oblicuos.' },
-          { name: 'Superman holds', sets: '3', reps: '15 seg', note: 'Zona lumbar suave.' }
-        ]},
-        { day: 'Día 5', title: 'Cadera', exercises: [
-          { name: 'Peso Muerto Rumano', sets: '3', reps: '15', note: 'Rodillas casi estiradas.' },
-          { name: 'Puente Isométrico', sets: '3', reps: '45 seg', note: 'Mantén cadera arriba.' },
-          { name: 'Elevación piernas', sets: '3', reps: '15', note: 'Piernas rectas.' }
+          { name: 'Elevación lateral', sets: '3', reps: '15 x pierna', note: 'Acostada de lado.' }
         ]}
       ]
     },
@@ -290,32 +269,23 @@ export default function App() {
         ]
       },
       workoutPlan: [
-        { day: 'Día 1', title: 'Empuje (Pecho/Tríceps)', exercises: [
+        { day: 'Día 1', title: 'Tren Superior', exercises: [
           { name: 'Flexiones de pecho', sets: '3', reps: '10-15', note: 'Cuerpo recto, sin arquear.' },
-          { name: 'Pike Push-ups', sets: '3', reps: '8-12', note: 'Para hombros.' },
           { name: 'Fondos en silla', sets: '3', reps: '12-15', note: 'Baja controlado.' },
-          { name: 'Plancha frontal', sets: '3', reps: '40 seg', note: 'Aprieta el abdomen.' }
+          { name: 'Back Widows', sets: '4', reps: '15', note: 'Empuja con los codos.' },
+          { name: 'Remo invertido en mesa', sets: '3', reps: '10', note: 'Usa una mesa firme.' }
         ]},
-        { day: 'Día 2', title: 'Piernas (Sin tensión en pies)', exercises: [
+        { day: 'Día 2', title: 'Tren Inferior', exercises: [
           { name: 'Sentadillas', sets: '3', reps: '15', note: 'Pie completamente plano.' },
           { name: 'Zancadas estáticas', sets: '3', reps: '10 x pierna', note: 'Baja recto, suave.' },
           { name: 'Puente de glúteo', sets: '3', reps: '20', note: 'Empuja con los talones.' },
           { name: 'Wall Sit (Silla invisible)', sets: '3', reps: '45 seg', note: 'Espalda a la pared.' }
         ]},
-        { day: 'Día 3', title: 'Core y Cardio', exercises: [
-          { name: 'Bird-Dog', sets: '3', reps: '10 x lado', note: 'Lento y controlado.' },
-          { name: 'Plancha lateral', sets: '3', reps: '30 seg x lado', note: 'Mantén la cadera arriba.' },
-          { name: 'Jumping Jacks (Suaves)', sets: '3', reps: '45 seg', note: 'Si hay calambre, haz pasos laterales.' }
-        ]},
-        { day: 'Día 4', title: 'Tracción (Espalda/Bíceps)', exercises: [
-          { name: 'Back Widows', sets: '4', reps: '15', note: 'Empuja con los codos.' },
-          { name: 'Remo invertido en mesa', sets: '3', reps: '10', note: 'Usa una mesa firme.' },
-          { name: 'Superman holds', sets: '3', reps: '20 seg', note: 'Tensa la espalda baja.' }
-        ]},
-        { day: 'Día 5', title: 'Full Body', exercises: [
+        { day: 'Día 3', title: 'Full Body y Core', exercises: [
           { name: 'Burpees sin salto', sets: '3', reps: '10', note: 'Evita el impacto en los pies.' },
           { name: 'Sentadilla Búlgara', sets: '3', reps: '10 x pierna', note: 'Usa una silla.' },
-          { name: 'Flexiones declinadas', sets: '3', reps: '10', note: 'Pies en silla.' }
+          { name: 'Bird-Dog', sets: '3', reps: '10 x lado', note: 'Lento y controlado.' },
+          { name: 'Plancha lateral', sets: '3', reps: '30 seg x lado', note: 'Mantén la cadera arriba.' }
         ]}
       ]
     },
@@ -332,31 +302,21 @@ export default function App() {
         ]
       },
       workoutPlan: [
-        { day: 'Día 1', title: 'Glúteos y Pierna (Sin dolor lumbar)', exercises: [
+        { day: 'Día 1', title: 'Pierna y Glúteo', exercises: [
           { name: 'Puente de glúteo', sets: '4', reps: '20', note: 'No arquees la espalda al subir.' },
           { name: 'Sentadilla a cajón/silla', sets: '3', reps: '15', note: 'Siéntate y levántate.' },
-          { name: 'Clamshells', sets: '3', reps: '15 x pierna', note: 'Activación lateral.' },
-          { name: 'Plancha apoyando rodillas', sets: '3', reps: '30 seg', note: 'Protege tu zona lumbar.' }
+          { name: 'Clamshells', sets: '3', reps: '15 x pierna', note: 'Activación lateral.' }
         ]},
-        { day: 'Día 2', title: 'Tren Superior Suave', exercises: [
+        { day: 'Día 2', title: 'Tren Superior', exercises: [
           { name: 'Flexiones en pared o mesa', sets: '3', reps: '12', note: 'Mantén el cuerpo recto.' },
           { name: 'Back Widows', sets: '3', reps: '12', note: 'Acostada boca arriba.' },
           { name: 'Fondos en silla (rodillas dobladas)', sets: '3', reps: '10', note: 'Sin bajar demasiado.' }
         ]},
-        { day: 'Día 3', title: 'Estabilidad Core (Anti-dolor)', exercises: [
+        { day: 'Día 3', title: 'Core y Full Body Suave', exercises: [
           { name: 'Bird-Dog', sets: '3', reps: '8 x lado', note: 'Excelente para dolor lumbar.' },
-          { name: 'Plancha lateral (en rodillas)', sets: '3', reps: '20 seg x lado', note: 'Mantén cadera alta.' },
-          { name: 'Curl-up McGill', sets: '3', reps: '10', note: 'Manos bajo espalda baja.' }
-        ]},
-        { day: 'Día 4', title: 'Cadera y Glúteo', exercises: [
-          { name: 'Puente a una pierna', sets: '3', reps: '10 x pierna', note: 'Cuidado con la espalda.' },
-          { name: 'Elevación lateral de pierna', sets: '3', reps: '20 x pierna', note: 'Acostada de lado.' },
-          { name: 'Toques de talón (Heel taps)', sets: '3', reps: '20 x lado', note: 'Trabaja el abdomen inferior.' }
-        ]},
-        { day: 'Día 5', title: 'Cuerpo Completo', exercises: [
+          { name: 'Plancha apoyando rodillas', sets: '3', reps: '30 seg', note: 'Protege tu zona lumbar.' },
           { name: 'Step-ups en silla', sets: '3', reps: '10 x pierna', note: 'Controla la bajada.' },
-          { name: 'Flutter Kicks', sets: '3', reps: '30 seg', note: 'Manos debajo de los glúteos.' },
-          { name: 'Superman holds suave', sets: '3', reps: '15 seg', note: 'Eleva poco, sin forzar.' }
+          { name: 'Toques de talón (Heel taps)', sets: '3', reps: '20 x lado', note: 'Trabaja el abdomen inferior.' }
         ]}
       ]
     }
@@ -366,7 +326,6 @@ export default function App() {
   Object.keys(profiles).forEach(p => {
     const pSupps = suppData[p] || { status: 'none', protein: false, creatine: false };
     if (pSupps.protein) {
-      // Modificamos para agregar la opción en la comida 2 (Colación) en lugar de la anterior
       profiles[p].nutrition.meals[1].options.push({
         name: 'Opción 3 (Rápida): Batido',
         items: [{scale: '30g Proteína (1 scoop)', noScale: '1 Scoop'}, {scale: '100g Plátano', noScale: '1 Plátano'}, {scale: '15g Maní', noScale: '1 Cda. maní'}]
@@ -627,7 +586,8 @@ export default function App() {
   const currentPlan = profiles[activeProfile].workoutPlan[activeDay] || profiles[activeProfile].workoutPlan[0];
   const viewedProfileData = profiles[viewedDietProfile] || profiles[activeProfile];
 
-  const planTotalDias = 20;
+  const planTotalDias = 12; // Modificado: 4 semanas x 3 días
+  
   const calculateTotalProgress = () => {
     let total = 0, done = 0;
     currentPlan.exercises.forEach((ex, exIdx) => {
@@ -1008,7 +968,7 @@ export default function App() {
                   <Target className="w-6 h-6 text-indigo-600" /> Avance Global
                 </h2>
                 <p className="text-[10px] font-bold mt-1 uppercase tracking-widest text-slate-500">
-                  En tiempo real (Meta: {planTotalDias})
+                  En tiempo real (Meta: {planTotalDias} días)
                 </p>
               </div>
               <div className="p-5 space-y-5">
